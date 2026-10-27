@@ -1,0 +1,1196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FMS Deadlock-Free Buffer Allocation Simulator — Banker's Algorithm in Manufacturing</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-xl bg-white border-bottom sticky-top">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
+      <span class="brand-mark"><i class="bi bi-gear-wide-connected"></i></span>
+      <div>
+        <div class="lh-1">FMS Deadlock-Free <span class="text-primary">Buffer Allocation Simulator</span></div>
+        <small class="text-secondary fw-normal fs-7 d-block">Applying Banker’s Algorithm to Flexible Manufacturing Systems</small>
+      </div>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <div class="collapse navbar-collapse" id="navbarMain">
+      <!-- Main Navigation Tabs -->
+      <ul class="nav fms-nav-pills ms-xl-4 me-auto my-2 my-xl-0" id="mainTabList" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="tab-fms-sim-btn" data-bs-toggle="tab" data-bs-target="#tab-fms-sim" type="button" role="tab">
+            <i class="bi bi-building-gear me-1"></i>Factory Simulation
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-fms-explorer-btn" data-bs-toggle="tab" data-bs-target="#tab-fms-explorer" type="button" role="tab">
+            <i class="bi bi-shield-check me-1"></i>Safety Explorer
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-fms-experiments-btn" data-bs-toggle="tab" data-bs-target="#tab-fms-experiments" type="button" role="tab">
+            <i class="bi bi-flask me-1"></i>Experiment Lab
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-fms-eval-btn" data-bs-toggle="tab" data-bs-target="#tab-fms-eval" type="button" role="tab">
+            <i class="bi bi-graph-up-arrow me-1"></i>Evaluation &amp; Charts
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-fms-paper-btn" data-bs-toggle="tab" data-bs-target="#tab-fms-paper" type="button" role="tab">
+            <i class="bi bi-journal-text me-1"></i>Research Paper
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-classic-os-btn" data-bs-toggle="tab" data-bs-target="#tab-classic-os" type="button" role="tab">
+            <i class="bi bi-cpu me-1"></i>OS Banker's Calculator
+          </button>
+        </li>
+      </ul>
+
+      <!-- Navbar Right Controls -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="badge bg-primary" id="fmsPolicyIndicator">Banker's Avoidance Active</span>
+        <span class="badge bg-light text-dark border"><i class="bi bi-clock me-1"></i>Time: <strong id="fmsSimClock">0s</strong></span>
+        
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-collection me-1"></i>OS Presets
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm" id="presetMenu">
+            <li><h6 class="dropdown-header">Classic Problems</h6></li>
+            <li><a class="dropdown-item" href="#" data-preset="test_case_6x4"><i class="bi bi-patch-check-fill text-success me-2"></i>6×4 Test Case (156 Sequences)</a></li>
+            <li><a class="dropdown-item" href="#" data-preset="textbook"><i class="bi bi-book me-2"></i>Silberschatz 5×3 Classic (Safe)</a></li>
+            <li><a class="dropdown-item" href="#" data-preset="deadlock"><i class="bi bi-exclamation-octagon text-danger me-2"></i>Unsafe / Deadlock Scenario</a></li>
+            <li><a class="dropdown-item" href="#" data-preset="four_process"><i class="bi bi-grid-3x2-gap me-2"></i>4 Processes × 4 Resources</a></li>
+            <li><a class="dropdown-item" href="#" data-preset="multi_safe"><i class="bi bi-shuffle me-2"></i>Multiple Safe Sequences</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="#" id="clearAllPresetBtn"><i class="bi bi-trash3 me-2"></i>Empty Problem (All 0s)</a></li>
+          </ul>
+        </div>
+
+        <button id="importExportBtn" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#importExportModal" title="Import or Export JSON">
+          <i class="bi bi-arrow-down-up me-1"></i>Import/Export
+        </button>
+
+        <button id="reportBtn" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#reportModal" title="Generate printable solution report">
+          <i class="bi bi-file-earmark-text me-1"></i>Report
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="container-fluid px-lg-4 py-4">
+
+  <!-- Research Hero Banner -->
+  <section class="hero-panel mb-4">
+    <div class="row align-items-center g-3">
+      <div class="col-lg-8">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-mortarboard-fill me-1"></i>Research-Based System</span>
+          <span class="text-secondary small">Lawley, Reveliotis, &amp; Ferreira (1998)</span>
+        </div>
+        <h1 class="display-6 fw-bold mb-2">FMS Deadlock-Free <span class="text-primary">Buffer Space Allocation Simulator</span></h1>
+        <p class="text-secondary mb-2 hero-copy">
+          In an automated <strong>Flexible Manufacturing System (FMS)</strong>, workpieces follow strictly ordered machining routes through workstations with finite-capacity buffers. When buffers fill up, upstream machines become blocked. Interacting resource contentions create catastrophic <strong>circular wait deadlocks</strong> that halt entire factories.
+        </p>
+        <p class="text-secondary small mb-3">
+          This simulator implements Dijkstra's Banker's Algorithm adapted as a real-time buffer-space allocation supervisor. By exploiting deterministic part routing, the controller evaluates tentative future states and delays unsafe transitions, guaranteeing deadlock-free manufacturing.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-primary btn-sm" onclick="document.getElementById('tab-fms-sim-btn').click(); window.FMS.start();">
+            <i class="bi bi-play-circle-fill me-1"></i>Run Factory Simulation
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('tab-fms-paper-btn').click();">
+            <i class="bi bi-journal-check me-1"></i>Read Methodology &amp; Paper
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('tab-fms-experiments-btn').click();">
+            <i class="bi bi-flask-fill me-1"></i>Deadlock Lab Scenarios
+          </button>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="p-3 bg-white rounded-3 border shadow-sm">
+          <div class="fw-bold small text-dark mb-2"><i class="bi bi-info-circle-fill text-primary me-1"></i>OS vs. FMS Banker's Formulation</div>
+          <ul class="list-unstyled small text-secondary mb-0">
+            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i><strong>Resources:</strong> Discrete buffer slots ($B_1, B_2, B_3$) and machine bays.</li>
+            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i><strong>Route Claims:</strong> Part routes provide deterministic a priori maximum claims.</li>
+            <li class="mb-2"><i class="bi bi-check2 text-primary me-1"></i><strong>Pipelined Release:</strong> Resources are held and freed stage-by-stage as workpieces advance.</li>
+            <li><i class="bi bi-shield-check text-success me-1"></i><strong>Deadlock Avoidance:</strong> Proactive online controller; does not merely detect deadlocks after they happen.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Global Deadlock Alert Banner -->
+  <div id="fmsDeadlockBanner" class="alert alert-danger fms-decision-banner d-none mb-4" role="alert"></div>
+
+  <!-- TAB CONTENT CONTAINER -->
+  <div class="tab-content" id="mainTabContent">
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: FACTORY FLOOR SIMULATION (MAIN ATTRACTION)                        -->
+    <!-- ========================================================================= -->
+    <div class="tab-pane fade show active" id="tab-fms-sim" role="tabpanel">
+
+      <!-- Factory Metrics Overview Cards -->
+      <section class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="metric-card">
+            <div class="metric-label">Completed parts</div>
+            <div class="metric-value text-success" id="fmsMetricCompleted">0</div>
+            <div class="metric-foot">Finished workpieces</div>
+            <span class="metric-icon green"><i class="bi bi-check2-circle"></i></span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="metric-card">
+            <div class="metric-label">Throughput rate</div>
+            <div class="metric-value text-primary" id="fmsMetricThroughput">0.0/min</div>
+            <div class="metric-foot">Production velocity</div>
+            <span class="metric-icon blue"><i class="bi bi-speedometer2"></i></span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="metric-card">
+            <div class="metric-label">Granted moves</div>
+            <div class="metric-value" id="fmsMetricGranted">0</div>
+            <div class="metric-foot">Safe allocations</div>
+            <span class="metric-icon cyan"><i class="bi bi-arrow-right-circle"></i></span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="metric-card">
+            <div class="metric-label">Delayed requests</div>
+            <div class="metric-value text-warning" id="fmsMetricDelayed">0</div>
+            <div class="metric-foot">Buffer waits</div>
+            <span class="metric-icon yellow"><i class="bi bi-hourglass-split"></i></span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="metric-card">
+            <div class="metric-label">Unsafe prevented</div>
+            <div class="metric-value text-danger" id="fmsMetricUnsafePrevented">0</div>
+            <div class="metric-foot">Deadlocks avoided</div>
+            <span class="metric-icon red"><i class="bi bi-shield-x"></i></span>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+          <div class="metric-card">
+            <div class="metric-label">Avg. Check Time</div>
+            <div class="metric-value" id="fmsMetricCompTime">&lt; 0.05 ms</div>
+            <div class="metric-foot">Supervisor latency</div>
+            <span class="metric-icon violet"><i class="bi bi-cpu"></i></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Simulation Controls & Policy Strip -->
+      <section class="app-card mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button id="fmsPlayPauseBtn" class="btn btn-primary btn-sm">
+              <i class="bi bi-play-fill me-1"></i>Play
+            </button>
+            <button id="fmsStepBtn" class="btn btn-outline-secondary btn-sm" title="Advance one discrete simulation tick">
+              <i class="bi bi-skip-forward-fill me-1"></i>Step Tick
+            </button>
+            <button id="fmsResetBtn" class="btn btn-light border btn-sm" title="Restore factory to initial clean state">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Factory
+            </button>
+            
+            <div class="vr mx-1"></div>
+
+            <div class="d-flex align-items-center gap-1">
+              <span class="small text-secondary fw-semibold">Speed:</span>
+              <select id="fmsSpeedSelect" class="form-select form-select-sm" style="width: 85px;">
+                <option value="0.5">0.5x</option>
+                <option value="1" selected>1.0x</option>
+                <option value="2">2.0x</option>
+                <option value="5">5.0x</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="d-flex align-items-center gap-1">
+              <span class="small text-secondary fw-semibold">Supervisor Policy:</span>
+              <select id="fmsPolicySelect" class="form-select form-select-sm" style="width: 250px;">
+                <option value="bankers" selected>🛡️ Banker's Avoidance (Lawley et al. 1998)</option>
+                <option value="uncontrolled">⚠️ Uncontrolled Greedy Policy (FCFS Baseline)</option>
+              </select>
+            </div>
+
+            <div class="d-flex align-items-center gap-1">
+              <span class="small text-secondary fw-semibold">Quick Scenario:</span>
+              <select id="fmsScenarioSelect" class="form-select form-select-sm" style="width: 210px;">
+                <option value="scenario_a" selected>A: Safe Production Flow</option>
+                <option value="scenario_b">B: Buffer Saturation Blocking</option>
+                <option value="scenario_c">C: Unsafe Move Denied</option>
+                <option value="scenario_d_bankers">D: Contention (Banker's)</option>
+                <option value="scenario_d_uncontrolled">D: Contention (Uncontrolled Deadlock)</option>
+                <option value="scenario_e">E: Recovery via Release</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISUAL MANUFACTURING FLOOR CANVAS -->
+      <section class="app-card mb-4">
+        <div class="section-heading mb-3">
+          <div>
+            <div class="section-kicker">MANUFACTURING CELL VIEW</div>
+            <h2 class="h5 mb-1">Interactive Factory Floor</h2>
+            <p class="text-secondary small mb-0">Three CNC workstations with finite-capacity intermediate buffers and cross-flow part routing.</p>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <span class="small text-secondary"><i class="bi bi-circle-fill text-primary fs-7 me-1"></i>Part A (Shaft)</span>
+            <span class="small text-secondary"><i class="bi bi-circle-fill text-success fs-7 me-1"></i>Part B (Housing)</span>
+            <span class="small text-secondary"><i class="bi bi-circle-fill text-purple fs-7 me-1" style="color:#8b5cf6;"></i>Part C (Flange)</span>
+          </div>
+        </div>
+
+        <div class="fms-factory-canvas">
+          <div class="row g-3 align-items-stretch">
+            
+            <!-- Infeed Bay -->
+            <div class="col-12 col-xl-2 d-flex flex-column">
+              <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-between">
+                <div>
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-bold text-dark"><i class="bi bi-box-arrow-in-right me-1"></i>Raw Infeed</span>
+                    <span class="badge bg-secondary" id="infeedCount">4</span>
+                  </div>
+                  <div class="small text-secondary mb-2">Incoming raw stock ready for admission:</div>
+                  <div class="d-flex flex-column gap-1">
+                    <span class="badge badge-part-a text-start py-1"><span class="chip-dot"></span>Part A (M1 → B2 → M2)</span>
+                    <span class="badge badge-part-b text-start py-1"><span class="chip-dot"></span>Part B (M2 → B1 → M1)</span>
+                    <span class="badge badge-part-c text-start py-1"><span class="chip-dot"></span>Part C (M3 → B1 → M1)</span>
+                  </div>
+                </div>
+                <div class="fms-flow-indicator mt-3">
+                  <span class="conveyor-arrow">Admit <i class="bi bi-arrow-right"></i></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Manufacturing Flow: M1, B1, M2, B2, M3, B3 -->
+            <div class="col-12 col-xl-8">
+              <div class="row g-3">
+                
+                <!-- Workstation 1: CNC Milling (M1) -->
+                <div class="col-md-4">
+                  <div class="fms-machine-card status-idle" id="machCard_M1">
+                    <div class="fms-machine-header">
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="fms-mach-icon"><i class="bi bi-gear-wide-connected"></i></span>
+                        <div>
+                          <div class="fw-bold small">M1: CNC Milling</div>
+                          <div class="fs-7 text-secondary">Workstation 1</div>
+                        </div>
+                      </div>
+                      <span class="badge bg-secondary fms-status-badge" id="machStatus_M1">IDLE</span>
+                    </div>
+
+                    <div class="mb-2" id="machJob_M1">
+                      <div class="fms-slot-empty">No Part Loaded</div>
+                    </div>
+
+                    <div class="progress" style="height: 6px;">
+                      <div class="progress-bar bg-primary" id="machProgress_M1" role="progressbar" style="width: 0%"></div>
+                    </div>
+                  </div>
+
+                  <!-- Intermediate Buffer B1 (Milling Input/Queue) -->
+                  <div class="fms-buffer-card mt-3" id="bufCard_B1">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-semibold small"><i class="bi bi-inboxes-fill text-primary me-1"></i>Buffer B1 (Milling)</span>
+                      <span class="badge bg-light text-secondary border" id="bufCount_B1">0 / 2 slots</span>
+                    </div>
+                    <div class="fms-buffer-slots-container" id="bufSlots_B1"></div>
+                  </div>
+                </div>
+
+                <!-- Workstation 2: CNC Turning Lathe (M2) -->
+                <div class="col-md-4">
+                  <div class="fms-machine-card status-idle" id="machCard_M2">
+                    <div class="fms-machine-header">
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="fms-mach-icon"><i class="bi bi-disc"></i></span>
+                        <div>
+                          <div class="fw-bold small">M2: Turning Lathe</div>
+                          <div class="fs-7 text-secondary">Workstation 2</div>
+                        </div>
+                      </div>
+                      <span class="badge bg-secondary fms-status-badge" id="machStatus_M2">IDLE</span>
+                    </div>
+
+                    <div class="mb-2" id="machJob_M2">
+                      <div class="fms-slot-empty">No Part Loaded</div>
+                    </div>
+
+                    <div class="progress" style="height: 6px;">
+                      <div class="progress-bar bg-primary" id="machProgress_M2" role="progressbar" style="width: 0%"></div>
+                    </div>
+                  </div>
+
+                  <!-- Intermediate Buffer B2 (Lathe Input/Queue) -->
+                  <div class="fms-buffer-card mt-3" id="bufCard_B2">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-semibold small"><i class="bi bi-inboxes-fill text-success me-1"></i>Buffer B2 (Lathe)</span>
+                      <span class="badge bg-light text-secondary border" id="bufCount_B2">0 / 2 slots</span>
+                    </div>
+                    <div class="fms-buffer-slots-container" id="bufSlots_B2"></div>
+                  </div>
+                </div>
+
+                <!-- Workstation 3: Precision Grinder (M3) -->
+                <div class="col-md-4">
+                  <div class="fms-machine-card status-idle" id="machCard_M3">
+                    <div class="fms-machine-header">
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="fms-mach-icon"><i class="bi bi-bullseye"></i></span>
+                        <div>
+                          <div class="fw-bold small">M3: Precision Grinder</div>
+                          <div class="fs-7 text-secondary">Workstation 3</div>
+                        </div>
+                      </div>
+                      <span class="badge bg-secondary fms-status-badge" id="machStatus_M3">IDLE</span>
+                    </div>
+
+                    <div class="mb-2" id="machJob_M3">
+                      <div class="fms-slot-empty">No Part Loaded</div>
+                    </div>
+
+                    <div class="progress" style="height: 6px;">
+                      <div class="progress-bar bg-primary" id="machProgress_M3" role="progressbar" style="width: 0%"></div>
+                    </div>
+                  </div>
+
+                  <!-- Intermediate Buffer B3 (Cross-Flow / Exit) -->
+                  <div class="fms-buffer-card mt-3" id="bufCard_B3">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-semibold small"><i class="bi bi-inboxes-fill text-purple me-1"></i>Buffer B3 (Cross-Flow)</span>
+                      <span class="badge bg-light text-secondary border" id="bufCount_B3">0 / 1 slots</span>
+                    </div>
+                    <div class="fms-buffer-slots-container" id="bufSlots_B3"></div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Outfeed Bay -->
+            <div class="col-12 col-xl-2 d-flex flex-column">
+              <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-between">
+                <div>
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small fw-bold text-dark"><i class="bi bi-box-arrow-right me-1"></i>Finished Goods</span>
+                    <span class="badge bg-success" id="outfeedCount">0</span>
+                  </div>
+                  <div class="small text-secondary mb-2">Completed workpieces ready for assembly:</div>
+                  <div class="text-center py-3 text-secondary small">
+                    <i class="bi bi-trophy display-6 text-warning d-block mb-1"></i>
+                    All route steps completed deadlock-free
+                  </div>
+                </div>
+                <div class="fms-flow-indicator mt-3">
+                  <span class="conveyor-arrow"><i class="bi bi-check2"></i> Inspection Out</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- Active Workpieces Roster & Banker's Matrix Table -->
+      <div class="row g-4 mb-4">
+        
+        <!-- Active Workpieces Table -->
+        <div class="col-xl-6">
+          <section class="app-card h-100">
+            <div class="section-heading mb-2">
+              <div>
+                <div class="section-kicker">WORK-IN-PROCESS (WIP)</div>
+                <h3 class="h6 mb-0 fw-bold">Active Parts on Factory Floor</h3>
+              </div>
+              <span class="small text-secondary">Click "Inspect" to preview move</span>
+            </div>
+            
+            <div class="table-responsive mt-3">
+              <table class="table table-hover align-middle small mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Part ID</th>
+                    <th>Type</th>
+                    <th>Current Location</th>
+                    <th>Route Progress</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="activeJobsTableBody">
+                  <tr><td colspan="6" class="text-center text-muted py-3">No active parts loaded.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <!-- Banker's Allocation & Claim Matrix -->
+        <div class="col-xl-6">
+          <section class="app-card h-100">
+            <div class="section-heading mb-2">
+              <div>
+                <div class="section-kicker">ONLINE SUPERVISOR STATE</div>
+                <h3 class="h6 mb-0 fw-bold">Banker's Buffer Allocation Matrix</h3>
+              </div>
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Lawley et al. (1998)</span>
+            </div>
+            
+            <div class="table-responsive mt-3">
+              <table class="table table-sm table-bordered text-center align-middle small mb-0" id="fmsBankerMatrixTable">
+                <!-- Dynamically rendered -->
+              </table>
+            </div>
+
+            <div class="small text-secondary mt-2">
+              <i class="bi bi-info-circle me-1"></i>
+              <strong>Allocation:</strong> currently occupied buffer slots. <strong>Max:</strong> 1 if buffer is in remaining route. <strong>Need:</strong> <code>Max − Allocation</code>.
+            </div>
+          </section>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: STEP-BY-STEP SAFETY EXPLORER                                       -->
+    <!-- ========================================================================= -->
+    <div class="tab-pane fade" id="tab-fms-explorer" role="tabpanel">
+      <section class="app-card mb-4" id="fmsSafetyExplorerSection">
+        <div class="section-heading mb-3">
+          <div>
+            <div class="section-kicker">ALGORITHM TRACE EXPLORER</div>
+            <h2 class="h5 mb-1">Step-by-Step Banker's Safety Controller</h2>
+            <p class="text-secondary small mb-0">Inspect how the supervisor evaluates tentative buffer allocations before granting or delaying material transfer.</p>
+          </div>
+          <button class="btn btn-outline-primary btn-sm" onclick="window.FMS.inspectJobMove('J1')">
+            <i class="bi bi-arrow-repeat me-1"></i>Evaluate Sample Move
+          </button>
+        </div>
+
+        <div id="fmsExplorerContainer">
+          <div class="p-4 text-center text-muted">
+            <i class="bi bi-shield-check display-6 d-block mb-2 text-primary opacity-50"></i>
+            <strong>No Active Safety Trace Selected</strong>
+            <p class="small mb-0">Select an active workpiece on the factory floor or click "Evaluate Sample Move" above.</p>
+          </div>
+        </div>
+
+        <div class="mt-4 p-3 bg-light rounded-3 border small">
+          <div class="fw-bold mb-1 text-dark"><i class="bi bi-check-circle-fill text-success me-1"></i>Banker's Safety Algorithm Rules in Manufacturing:</div>
+          <ol class="mb-0 ps-3 text-secondary">
+            <li><strong>Condition 1 (Adherence to Route Claim):</strong> <code>Request ≤ Need</code>. The part cannot claim a buffer that does not appear in its remaining route.</li>
+            <li><strong>Condition 2 (Capacity Constraint):</strong> <code>Request ≤ Available</code>. The destination buffer must have at least one free physical slot.</li>
+            <li><strong>Condition 3 (Safe Future State):</strong> Tentatively assign <code>Available' = Available − Request</code>, <code>Alloc' = Alloc + Request</code>, <code>Need' = Need − Request</code>. Search for a completion sequence where each remaining workpiece satisfies <code>Need' ≤ Work</code>. If found, the move is <strong>GRANTED</strong>. If not, the move is <strong>DELAYED</strong> to avoid circular wait deadlock.</li>
+          </ol>
+        </div>
+      </section>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: DEADLOCK & BLOCKING EXPERIMENT LAB                                 -->
+    <!-- ========================================================================= -->
+    <div class="tab-pane fade" id="tab-fms-experiments" role="tabpanel">
+      <section class="app-card mb-4">
+        <div class="section-heading mb-3">
+          <div>
+            <div class="section-kicker">CONTROLLED EXPERIMENTS</div>
+            <h2 class="h5 mb-1">Deadlock &amp; Blocking Experiment Lab</h2>
+            <p class="text-secondary small mb-0">Load controlled research scenarios to investigate how finite buffer capacity and scheduling policies dictate manufacturing flow.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" id="fmsRunComparisonBtn">
+            <i class="bi bi-sliders me-1"></i>Run Automated Policy Benchmark
+          </button>
+        </div>
+
+        <div class="row g-3 mb-4">
+          
+          <!-- Scenario A -->
+          <div class="col-md-6 col-xl-4">
+            <div class="scenario-card">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-success-subtle text-success border border-success-subtle">Scenario A</span>
+                <span class="fs-7 text-secondary">Normal Flow</span>
+              </div>
+              <h3 class="h6 fw-bold mb-1">Safe Production Flow</h3>
+              <p class="small text-secondary mb-3">Parts A, B, and C flow through machines with sufficient buffer capacity. All moves satisfy safety conditions.</p>
+              <button class="btn btn-outline-success btn-sm w-100" onclick="window.FMS.loadScenario('scenario_a')">
+                <i class="bi bi-play-circle me-1"></i>Load Scenario A
+              </button>
+            </div>
+          </div>
+
+          <!-- Scenario B -->
+          <div class="col-md-6 col-xl-4">
+            <div class="scenario-card">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Scenario B</span>
+                <span class="fs-7 text-secondary">Capacity Saturation</span>
+              </div>
+              <h3 class="h6 fw-bold mb-1">Buffer Saturation (Simple Blocking)</h3>
+              <p class="small text-secondary mb-3">Destination buffer B2 is full (1/1). Machine M1 finishes and attempts to transfer. Delayed due to capacity, not circular deadlock.</p>
+              <button class="btn btn-outline-warning btn-sm w-100" onclick="window.FMS.loadScenario('scenario_b')">
+                <i class="bi bi-play-circle me-1"></i>Load Scenario B
+              </button>
+            </div>
+          </div>
+
+          <!-- Scenario C -->
+          <div class="col-md-6 col-xl-4">
+            <div class="scenario-card">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Scenario C</span>
+                <span class="fs-7 text-secondary">Avoidance Controller</span>
+              </div>
+              <h3 class="h6 fw-bold mb-1">Unsafe Allocation Prevented</h3>
+              <p class="small text-secondary mb-3">Job J2 requests B1. Although a slot is physically free, granting it would lock the system in circular wait. Banker's denies the move!</p>
+              <button class="btn btn-outline-primary btn-sm w-100" onclick="window.FMS.loadScenario('scenario_c')">
+                <i class="bi bi-play-circle me-1"></i>Load Scenario C
+              </button>
+            </div>
+          </div>
+
+          <!-- Scenario D -->
+          <div class="col-md-6 col-xl-6">
+            <div class="scenario-card border-danger-subtle">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Scenario D (Contention Baseline)</span>
+                <span class="fs-7 text-danger fw-bold">Uncontrolled Policy</span>
+              </div>
+              <h3 class="h6 fw-bold mb-1">Resource Contention &amp; Circular Deadlock</h3>
+              <p class="small text-secondary mb-3">Under Uncontrolled Greedy allocation, both Part A and Part B grab conflicting buffers greedily. <strong>Result: CIRCULAR WAIT DEADLOCK</strong> between M1 and M2! Production halts completely.</p>
+              <button class="btn btn-outline-danger btn-sm w-100" onclick="window.FMS.loadScenario('scenario_d_uncontrolled')">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i>Trigger Uncontrolled Deadlock
+              </button>
+            </div>
+          </div>
+
+          <!-- Scenario E -->
+          <div class="col-md-6 col-xl-6">
+            <div class="scenario-card">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-info-subtle text-info border border-info-subtle">Scenario E</span>
+                <span class="fs-7 text-secondary">Resource Release</span>
+              </div>
+              <h3 class="h6 fw-bold mb-1">Recovery Through Resource Release</h3>
+              <p class="small text-secondary mb-3">Machine M1 is stalled waiting for Buffer B2. Downstream Job J2 finishes M2 and releases resources, immediately unblocking M1.</p>
+              <button class="btn btn-outline-info btn-sm w-100" onclick="window.FMS.loadScenario('scenario_e')">
+                <i class="bi bi-arrow-repeat me-1"></i>Load Scenario E
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Automated Benchmark Comparison Result -->
+        <div id="fmsPolicyComparisonResult" class="d-none mt-4 p-4 bg-light rounded-3 border">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="h6 fw-bold mb-0">Policy Comparison Benchmark (Identical Contention Conditions)</h4>
+            <span class="badge bg-primary">Automated Test Execution</span>
+          </div>
+          <div class="chart-wrap" style="height: 260px;">
+            <canvas id="fmsPolicyChart"></canvas>
+          </div>
+          <div class="mt-3 small text-secondary">
+            <strong>Key Finding:</strong> Under identical cross-flow contention, the Uncontrolled Greedy Policy quickly triggers circular wait deadlocks, reducing factory throughput to zero. The Banker's Avoidance Controller (Lawley et al. 1998) eliminates 100% of deadlocks, ensuring smooth, continuous production.
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4: PERFORMANCE EVALUATION & CHARTS                                     -->
+    <!-- ========================================================================= -->
+    <div class="tab-pane fade" id="tab-fms-eval" role="tabpanel">
+      <div class="row g-4">
+        
+        <div class="col-lg-7">
+          <section class="app-card h-100">
+            <div class="section-heading mb-2">
+              <div>
+                <div class="section-kicker">BUFFER OCCUPANCY OVER TIME</div>
+                <h3 class="h6 mb-0 fw-bold">Live Buffer Space Utilization (%)</h3>
+              </div>
+              <span class="chart-dot"></span>
+            </div>
+            <p class="text-secondary small mt-1">Real-time percentage capacity filled for Buffers B1, B2, and B3 during simulation execution.</p>
+            <div class="chart-wrap" style="height: 300px;">
+              <canvas id="fmsBufferChart"></canvas>
+            </div>
+          </section>
+        </div>
+
+        <div class="col-lg-5">
+          <section class="app-card h-100">
+            <div class="section-heading mb-2">
+              <div>
+                <div class="section-kicker">MACHINE DUTY CYCLES</div>
+                <h3 class="h6 mb-0 fw-bold">Workstation State Distribution</h3>
+              </div>
+            </div>
+            <p class="text-secondary small mt-1">Cumulative time workstations spend processing, waiting on full buffers, or blocked.</p>
+            <div class="chart-wrap" style="height: 300px;">
+              <canvas id="fmsMachineChart"></canvas>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 5: RESEARCH PAPER & METHODOLOGY                                       -->
+    <!-- ========================================================================= -->
+    <div class="tab-pane fade" id="tab-fms-paper" role="tabpanel">
+      <section class="app-card mb-4">
+        <div class="research-citation-card mb-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+            <div>
+              <span class="badge bg-primary mb-1">Foundational Research Reference</span>
+              <h2 class="h5 fw-bold mb-1">The Application and Evaluation of Banker’s Algorithm for Deadlock-Free Buffer Space Allocation in Flexible Manufacturing Systems</h2>
+              <div class="text-secondary small">
+                <strong>Authors:</strong> Mark A. Lawley, Spyros A. Reveliotis, and Placid M. Ferreira<br>
+                <strong>Journal:</strong> <em>International Journal of Flexible Manufacturing Systems</em>, Vol. 10, pp. 73–100 (1998)
+              </div>
+            </div>
+            <a href="https://doi.org/10.1023/A:1007969601583" target="_blank" rel="noopener noreferrer" class="doi-pill">
+              <i class="bi bi-box-arrow-up-right"></i> DOI: 10.1023/A:1007969601583
+            </a>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <h3 class="h6 fw-bold text-dark"><i class="bi bi-journal-check text-primary me-2"></i>Research Motivation &amp; Context</h3>
+            <p class="text-secondary small">
+              In modern Flexible Manufacturing Systems (FMS), workstations and automated guided vehicles (AGVs) process diverse parts concurrently. Because physical intermediate buffer storage is limited by floor space, machine tools, and tooling racks, finite-capacity buffers frequently become bottlenecks.
+            </p>
+            <p class="text-secondary small">
+              When a machine finishes machining a part, it cannot release the part until downstream buffer space is secured. If two or more parts with cross-flowing routes hold buffer spaces while waiting for buffers held by each other, a <strong>circular wait deadlock</strong> occurs. In manufacturing, aborting a part means scrapping expensive material or risking machine collision. Deadlock avoidance is therefore critical.
+            </p>
+
+            <h3 class="h6 fw-bold text-dark mt-4"><i class="bi bi-gear text-primary me-2"></i>Why Banker's Algorithm Fits Manufacturing</h3>
+            <p class="text-secondary small">
+              Dijkstra’s Banker’s Algorithm is fundamentally based on knowing the maximum claim of each process before execution. In general-purpose Operating Systems, programs rarely know their future resource requests ahead of time. In an FMS, however, <strong>part routes and processing sequences are deterministic and known in advance</strong>.
+            </p>
+            <p class="text-secondary small">
+              Lawley, Reveliotis, and Ferreira (1998) realized this natural congruence and formulated Banker's Algorithm as an online supervisor for buffer-space allocation, testing tentative states prior to granting part movements.
+            </p>
+          </div>
+
+          <div class="col-lg-6">
+            <h3 class="h6 fw-bold text-dark"><i class="bi bi-layers text-primary me-2"></i>Educational Model Formulation &amp; Assumptions</h3>
+            <div class="p-3 bg-light rounded border mb-3 small text-secondary">
+              <div class="fw-semibold text-dark mb-1">Implemented Simulator Model:</div>
+              <ul class="mb-0 ps-3">
+                <li><strong>Resources:</strong> Buffer spaces $B_1, B_2, B_3$ with configurable capacities ($C_1, C_2, C_3$).</li>
+                <li><strong>Workstations:</strong> 3 CNC machines with discrete operation times.</li>
+                <li><strong>Part Routing:</strong> 3 part types with cross-flow routing (Part A: M1→B2→M2; Part B: M2→B1→M1; Part C: M3→B1→M1).</li>
+                <li><strong>Stage-by-Stage Transfer:</strong> Workpieces release upstream buffer slots when entering a machine, holding only current resources.</li>
+                <li><strong>Supervisor Logic:</strong> Exact implementation of Lawley et al.'s safety check with Work and Finish vectors.</li>
+              </ul>
+            </div>
+
+            <h3 class="h6 fw-bold text-dark"><i class="bi bi-exclamation-circle text-primary me-2"></i>Limitations &amp; Future Scope</h3>
+            <p class="text-secondary small">
+              This simulator models an educational abstraction of Lawley et al.'s framework. The paper also explored alternative routings (routing flexibility), polynomial vs. NP-complete deadlock avoidance policies (DAPs), and automated AGV transport. Future simulator extensions could incorporate stochastic machine breakdowns, tool wear, and automated fixture pallet constraints.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 6: CONVENTIONAL OS BANKER'S CALCULATOR (PRESERVED)                     -->
+    <!-- ========================================================================= -->
+    <div class="tab-pane fade" id="tab-classic-os" role="tabpanel">
+      
+      <div class="alert alert-info py-2 px-3 mb-4 small d-flex align-items-center gap-2">
+        <i class="bi bi-info-circle-fill fs-6 text-primary"></i>
+        <div>
+          <strong>Conventional Operating Systems Resource Model:</strong> In this textbook OS mode, processes request units from an undifferentiated pool of reusable resources (CPU, RAM, Tape drives) and hold them until total task completion. Switch to the <strong>Factory Simulation</strong> tab to explore stage-by-stage buffer allocation in manufacturing.
+        </div>
+      </div>
+
+      <!-- Preserved OS Summary Cards -->
+      <section class="row g-3 mb-4" id="summaryCards">
+        <div class="col-6 col-xl-3">
+          <div class="metric-card">
+            <div class="metric-label">System safety</div>
+            <div class="metric-value" id="statusValue">Ready</div>
+            <div class="metric-foot" id="statusFoot">Ready for safety test</div>
+            <span class="metric-icon blue"><i class="bi bi-shield-check"></i></span>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="metric-card">
+            <div class="metric-label">Safe sequences found</div>
+            <div class="metric-value sequence-value" id="safeSeqCount">0</div>
+            <div class="metric-foot" id="sequenceFoot">Run safety check</div>
+            <span class="metric-icon green"><i class="bi bi-signpost-split"></i></span>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="metric-card">
+            <div class="metric-label">Processes</div>
+            <div class="metric-value" id="processCount">5</div>
+            <div class="metric-foot" id="processFoot">P0 – P4</div>
+            <span class="metric-icon violet"><i class="bi bi-cpu"></i></span>
+          </div>
+        </div>
+        <div class="col-6 col-xl-3">
+          <div class="metric-card">
+            <div class="metric-label">Resource types</div>
+            <div class="metric-value" id="resourceCount">3</div>
+            <div class="metric-foot" id="resourceFoot">A, B, C</div>
+            <span class="metric-icon cyan"><i class="bi bi-boxes"></i></span>
+          </div>
+        </div>
+      </section>
+
+      <div class="row g-4">
+        <!-- Left Column: Problem builder, matrices, algorithms -->
+        <div class="col-xl-8">
+          
+          <!-- 01: Configuration & Input Modes -->
+          <section class="app-card mb-4">
+            <div class="section-heading">
+              <div>
+                <div class="section-kicker">01 / PROBLEM SPECIFICATIONS</div>
+                <h2 class="h5 mb-1">Dimensions &amp; Input Modes</h2>
+                <p class="text-secondary small mb-0">Customize problem dimensions and select how resource availability and claims are provided.</p>
+              </div>
+              <div class="d-flex gap-2">
+                <button id="randomizeBtn" class="btn btn-outline-secondary btn-sm" title="Generate solvable random problem">
+                  <i class="bi bi-dice-5 me-1"></i>Random Problem
+                </button>
+                <button id="resetDefaultsBtn" class="btn btn-light btn-sm border" title="Reset dimensions to 5x3 blank">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                </button>
+              </div>
+            </div>
+
+            <div class="row g-3 align-items-end mt-2">
+              <div class="col-6 col-md-3">
+                <label for="processesInput" class="form-label small fw-semibold">Number of processes</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-cpu"></i></span>
+                  <input type="number" min="1" max="10" class="form-control" id="processesInput" value="5">
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <label for="resourcesInput" class="form-label small fw-semibold">Resource types</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-boxes"></i></span>
+                  <input type="number" min="1" max="6" class="form-control" id="resourcesInput" value="3">
+                </div>
+              </div>
+              <div class="col-12 col-md-6 d-flex gap-2">
+                <button id="applyDimensionsBtn" class="btn btn-primary flex-fill">
+                  <i class="bi bi-grid-3x3-gap me-1"></i>Apply Dimensions
+                </button>
+                <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#customNamesCollapse" aria-expanded="false" title="Rename processes or resources">
+                  <i class="bi bi-pencil-square"></i> Names
+                </button>
+              </div>
+            </div>
+
+            <!-- Collapsible Process & Resource Name Editor -->
+            <div class="collapse mt-3" id="customNamesCollapse">
+              <div class="p-3 bg-light rounded-3 border">
+                <div class="fw-semibold small mb-2"><i class="bi bi-tags me-1"></i>Custom Process &amp; Resource Names</div>
+                <div class="row g-2">
+                  <div class="col-md-6">
+                    <label class="form-label small text-secondary mb-1">Process Names (comma-separated)</label>
+                    <input type="text" class="form-control form-control-sm" id="customProcessNames" placeholder="P0, P1, P2, P3, P4">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label small text-secondary mb-1">Resource Names (comma-separated)</label>
+                    <input type="text" class="form-control form-control-sm" id="customResourceNames" placeholder="A, B, C">
+                  </div>
+                </div>
+                <div class="d-flex justify-content-end mt-2">
+                  <button id="saveNamesBtn" class="btn btn-sm btn-secondary">Update Labels</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mode Switches -->
+            <div class="row g-3 mt-3 pt-3 border-top">
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold d-flex align-items-center gap-1">
+                  <span>Availability Input Mode</span>
+                  <i class="bi bi-question-circle text-muted" data-bs-toggle="tooltip" title="Total Mode: You enter total resource instances, Available is computed as Total - Sum(Allocated). Direct Mode: You enter Available vector directly."></i>
+                </label>
+                <div class="btn-group w-100" role="group">
+                  <input type="radio" class="btn-check" name="availMode" id="availModeDirect" autocomplete="off" checked>
+                  <label class="btn btn-outline-primary btn-sm" for="availModeDirect">
+                    <i class="bi bi-arrow-right-short"></i> Direct Available Vector
+                  </label>
+                  <input type="radio" class="btn-check" name="availMode" id="availModeTotal" autocomplete="off">
+                  <label class="btn btn-outline-primary btn-sm" for="availModeTotal">
+                    <i class="bi bi-calculator"></i> Total Resources (Auto Available)
+                  </label>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label small fw-semibold d-flex align-items-center gap-1">
+                  <span>Matrix Input Mode</span>
+                  <i class="bi bi-question-circle text-muted" data-bs-toggle="tooltip" title="Max Mode: Enter Allocation & Max, Need = Max - Allocation. Need Mode: Enter Allocation & Need, Max = Allocation + Need."></i>
+                </label>
+                <div class="btn-group w-100" role="group">
+                  <input type="radio" class="btn-check" name="matrixMode" id="matrixModeMax" autocomplete="off" checked>
+                  <label class="btn btn-outline-primary btn-sm" for="matrixModeMax">
+                    Allocation + Max Claim
+                  </label>
+                  <input type="radio" class="btn-check" name="matrixMode" id="matrixModeNeed" autocomplete="off">
+                  <label class="btn btn-outline-primary btn-sm" for="matrixModeNeed">
+                    Allocation + Remaining Need
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-strip mt-3" id="modeExplanationStrip">
+              <i class="bi bi-info-circle-fill me-2"></i>
+              <span id="modeExplanationText">Enter <strong>Allocation</strong> and <strong>Max Claim</strong>. The <strong>Need Matrix</strong> will be calculated automatically: <code>Need = Max − Allocation</code>.</span>
+            </div>
+          </section>
+
+          <!-- 02: Resource Matrices Table -->
+          <section class="app-card mb-4">
+            <div class="section-heading">
+              <div>
+                <div class="section-kicker">02 / PROBLEM MATRICES</div>
+                <h2 class="h5 mb-1">Matrix Editor</h2>
+                <p class="text-secondary small mb-0">Fill in your values. Table updates dynamically and validates non-negative integers.</p>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <button id="quickFillZerosBtn" class="btn btn-light btn-sm border" title="Set all values to 0">
+                  <i class="bi bi-0-circle me-1"></i>Zero All
+                </button>
+                <button id="checkSafetyBtn" class="btn btn-primary btn-sm">
+                  <i class="bi bi-shield-check me-1"></i>Check Safe State
+                </button>
+              </div>
+            </div>
+
+            <div class="table-responsive mt-3">
+              <table class="table matrix-table align-middle" id="matrixTable"></table>
+            </div>
+
+            <div id="validationMessage" class="alert d-none mt-3 mb-0" role="alert"></div>
+          </section>
+
+          <!-- 03: Interactive Analysis Tabs -->
+          <section class="app-card mb-4">
+            <ul class="nav nav-tabs card-tabs mb-3" id="analysisTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tab-safety-btn" data-bs-toggle="tab" data-bs-target="#tab-safety" type="button" role="tab">
+                  <i class="bi bi-shield-check me-1"></i>Banker's Safety Trace
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-request-btn" data-bs-toggle="tab" data-bs-target="#tab-request" type="button" role="tab">
+                  <i class="bi bi-bezier2 me-1"></i>Resource Request Simulator
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-deadlock-btn" data-bs-toggle="tab" data-bs-target="#tab-deadlock" type="button" role="tab">
+                  <i class="bi bi-exclamation-triangle me-1"></i>Deadlock Detection
+                </button>
+              </li>
+            </ul>
+
+            <div class="tab-content" id="analysisTabsContent">
+              <!-- TAB 1: Safety & Multi-Safe Sequences -->
+              <div class="tab-pane fade show active" id="tab-safety" role="tabpanel">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                  <div>
+                    <h3 class="h6 mb-1 fw-bold">Step-by-Step Execution Trace</h3>
+                    <p class="text-secondary small mb-0">Follow Work vector progression as processes satisfy condition <code>Need ≤ Work</code>.</p>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <button id="stepResetBtn" class="btn btn-light border btn-sm" disabled title="Reset to first step">
+                      <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </button>
+                    <button id="stepBackBtn" class="btn btn-light border btn-sm" disabled title="Previous step">
+                      <i class="bi bi-skip-backward-fill"></i>
+                    </button>
+                    <button id="autoPlayBtn" class="btn btn-light border btn-sm" disabled title="Auto play steps">
+                      <i class="bi bi-play-fill"></i> Play
+                    </button>
+                    <button id="stepNextBtn" class="btn btn-outline-primary btn-sm" disabled title="Next step">
+                      Next Step <i class="bi bi-skip-forward-fill ms-1"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Multi safe sequences pill container -->
+                <div id="allSequencesContainer" class="d-none mb-3 p-3 bg-light rounded-3 border">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="small fw-bold text-dark"><i class="bi bi-check2-all text-success me-1"></i>All Valid Safe Sequences (<span id="seqFoundCount">0</span>):</span>
+                    <span class="text-secondary small">Click any sequence to inspect its trace</span>
+                  </div>
+                  <div id="safeSequencesBadges" class="d-flex flex-wrap gap-2"></div>
+                </div>
+
+                <div id="stepSummary" class="step-summary mb-3">
+                  Click <strong>Check Safe State</strong> to run Banker's Algorithm and examine the execution trace.
+                </div>
+
+                <div id="traceList" class="trace-list"></div>
+              </div>
+
+              <!-- TAB 2: Resource Request Simulation -->
+              <div class="tab-pane fade" id="tab-request" role="tabpanel">
+                <div class="mb-3">
+                  <h3 class="h6 mb-1 fw-bold">Banker's Resource-Request Algorithm</h3>
+                  <p class="text-secondary small mb-0">Simulate a process requesting additional resources, verified against Banker's 3 conditions.</p>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label small fw-semibold" for="requestProcess">Requesting Process</label>
+                    <select class="form-select" id="requestProcess"></select>
+                    <div class="form-text mt-1" id="requestProcessInfo">Remaining Need: —</div>
+                  </div>
+                  <div class="col-md-8">
+                    <label class="form-label small fw-semibold">Requested Resource Vector</label>
+                    <div id="requestInputs" class="request-grid"></div>
+                    <div class="form-text">Must satisfy: <code>Request ≤ Need</code> and <code>Request ≤ Available</code>.</div>
+                  </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                  <button id="simulateRequestBtn" class="btn btn-primary">
+                    <i class="bi bi-check2-circle me-1"></i>Simulate Request
+                  </button>
+                  <button id="commitRequestBtn" class="btn btn-success d-none">
+                    <i class="bi bi-check-all me-1"></i>Commit Changes to Matrix
+                  </button>
+                  <button id="clearRequestBtn" class="btn btn-outline-secondary">Clear Request</button>
+                </div>
+
+                <div id="requestResult" class="request-result mt-3 d-none"></div>
+
+                <div class="mt-3 p-3 bg-light rounded-3 border small">
+                  <div class="fw-bold mb-1 text-secondary">Banker's Algorithm Request Rules:</div>
+                  <ol class="mb-0 ps-3 text-secondary">
+                    <li>If <code>Request[i] ≤ Need[i]</code>: Proceed to step 2. Otherwise, throw an error (process exceeded maximum claim).</li>
+                    <li>If <code>Request[i] ≤ Available</code>: Proceed to step 3. Otherwise, process must wait (resources unavailable).</li>
+                    <li>Tentatively allocate: <code>Available = Available − Request</code>, <code>Alloc = Alloc + Request</code>, <code>Need = Need − Request</code>. If resulting state is safe, request is granted!</li>
+                  </ol>
+                </div>
+              </div>
+
+              <!-- TAB 3: Deadlock Detection -->
+              <div class="tab-pane fade" id="tab-deadlock" role="tabpanel">
+                <div class="mb-3">
+                  <h3 class="h6 mb-1 fw-bold">Deadlock Detection Algorithm</h3>
+                  <p class="text-secondary small mb-0">Check if the current state contains deadlocked processes holding resources while waiting on unavailable allocations.</p>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 mb-3">
+                  <button id="runDeadlockCheckBtn" class="btn btn-warning">
+                    <i class="bi bi-search me-1"></i>Run Deadlock Detection
+                  </button>
+                  <div class="form-check form-switch ms-3">
+                    <input class="form-check-input" type="checkbox" role="switch" id="useCustomDeadlockRequests">
+                    <label class="form-check-label small" for="useCustomDeadlockRequests">Use Custom Request Matrix instead of Need</label>
+                  </div>
+                </div>
+
+                <div id="customRequestMatrixSection" class="d-none mb-3">
+                  <div class="small fw-semibold mb-2">Current Outstanding Request Matrix:</div>
+                  <div class="table-responsive">
+                    <table class="table matrix-table align-middle" id="deadlockRequestTable"></table>
+                  </div>
+                </div>
+
+                <div id="deadlockResult" class="request-result d-none mb-3"></div>
+                <div id="deadlockTrace" class="trace-list"></div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- Right Column: Visualizations, reference, logs -->
+        <div class="col-xl-4">
+          <!-- Live Chart -->
+          <section class="app-card mb-4">
+            <div class="section-heading">
+              <div>
+                <div class="section-kicker">LIVE VISUALIZATION</div>
+                <h2 class="h5 mb-0">Resource Overview</h2>
+              </div>
+              <span class="chart-dot"></span>
+            </div>
+            <p class="text-secondary small mt-2">Allocated vs. Available units per resource type.</p>
+            <div class="chart-wrap">
+              <canvas id="resourceChart" aria-label="Resource allocation chart"></canvas>
+            </div>
+            <div class="chart-legend">
+              <span><i class="legend-swatch allocated"></i>Allocated</span>
+              <span><i class="legend-swatch available"></i>Available</span>
+              <span id="chartLegendTotal" class="d-none"><i class="legend-swatch total"></i>Total</span>
+            </div>
+          </section>
+
+          <!-- Algorithm Reference -->
+          <section class="app-card mb-4">
+            <div class="section-heading">
+              <div>
+                <div class="section-kicker">ALGORITHM REFERENCE</div>
+                <h2 class="h5 mb-0">Banker's Logic</h2>
+              </div>
+            </div>
+            <div class="algorithm-list mt-3">
+              <div class="algorithm-item">
+                <span class="algorithm-number">1</span>
+                <div>
+                  <strong>Calculate Need</strong>
+                  <p>For each process, <code>Need[i] = Max[i] − Allocation[i]</code>.</p>
+                </div>
+              </div>
+              <div class="algorithm-item">
+                <span class="algorithm-number">2</span>
+                <div>
+                  <strong>Evaluate Eligibility</strong>
+                  <p>Find an unfinished process where <code>Need[i] ≤ Work</code> for all resources.</p>
+                </div>
+              </div>
+              <div class="algorithm-item">
+                <span class="algorithm-number">3</span>
+                <div>
+                  <strong>Release Resources</strong>
+                  <p>Simulate execution: <code>Work = Work + Allocation[i]</code>, mark <code>Finish[i] = true</code>.</p>
+                </div>
+              </div>
+              <div class="algorithm-item">
+                <span class="algorithm-number">4</span>
+                <div>
+                  <strong>Safety Decision</strong>
+                  <p>If all processes finish, state is <strong>SAFE</strong>. Otherwise <strong>UNSAFE</strong>.</p>
+                </div>
+              </div>
+            </div>
+            <div class="formula-box">
+              <span class="formula-label">SAFETY CONDITION</span>
+              <div class="font-monospace mt-1">Need[i][j] ≤ Work[j] (∀ j)</div>
+              <small>Work is initialized to Available vector.</small>
+            </div>
+          </section>
+
+          <!-- Activity Log -->
+          <section class="app-card">
+            <div class="section-heading">
+              <div>
+                <div class="section-kicker">SIMULATION LOG</div>
+                <h2 class="h5 mb-0">Action History</h2>
+              </div>
+              <button id="clearLogBtn" class="btn btn-link btn-sm text-decoration-none">Clear</button>
+            </div>
+            <div id="activityLog" class="activity-log mt-3">
+              <div class="empty-log"><i class="bi bi-journal-text"></i><span>Actions will appear here.</span></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <footer class="py-4 text-center text-secondary small border-top mt-5">
+    FMS Deadlock-Free Buffer Space Allocation Simulator · Based on Lawley, Reveliotis, &amp; Ferreira (1998) · Static GitHub Pages Compatible · All computations run client-side in browser
+  </footer>
+</main>
+
+<!-- Import / Export Modal -->
+<div class="modal fade" id="importExportModal" tabindex="-1" aria-labelledby="importExportModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="importExportModalLabel"><i class="bi bi-arrow-down-up me-2"></i>Import / Export Problem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-secondary small">Share your custom problem or save it for homework and lab tests.</p>
+        <div class="mb-3">
+          <label for="jsonProblemArea" class="form-label small fw-semibold">Problem JSON Definition</label>
+          <textarea class="form-control font-monospace fs-7" id="jsonProblemArea" rows="10" placeholder="Paste problem JSON here..."></textarea>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button id="copyJsonBtn" class="btn btn-outline-secondary btn-sm"><i class="bi bi-clipboard me-1"></i>Copy to Clipboard</button>
+          <button id="downloadJsonBtn" class="btn btn-outline-primary btn-sm"><i class="bi bi-download me-1"></i>Download JSON File</button>
+          <label class="btn btn-outline-secondary btn-sm mb-0">
+            <i class="bi bi-upload me-1"></i>Load from File <input type="file" id="uploadJsonInput" accept=".json" hidden>
+          </label>
+        </div>
+        <div id="importErrorAlert" class="alert alert-danger d-none mt-3 mb-0 py-2 small"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="applyImportJsonBtn"><i class="bi bi-check2-circle me-1"></i>Load Problem into Simulator</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Solution Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reportModalLabel"><i class="bi bi-file-earmark-text me-2"></i>Banker's Algorithm Solution Report</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body print-area" id="reportContent">
+        <!-- Dynamically rendered printable report -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="printReportBtn"><i class="bi bi-printer me-1"></i>Print / Save as PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="fms_simulator.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

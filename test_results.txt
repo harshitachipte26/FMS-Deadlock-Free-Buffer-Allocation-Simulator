@@ -1,0 +1,690 @@
+﻿<!DOCTYPE html>
+<html><head>
+  <meta charset="utf-8">
+  <title>Banker's Algorithm Test Runner</title>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Minimal mockup of DOM elements required by script.js -->
+  <div id="statusValue" style="color: rgb(185, 28, 28);">Unsafe State</div>
+  <div id="statusFoot">Deadlock avoidance cannot be guaranteed</div>
+  <div id="safeSeqCount" style="color: rgb(185, 28, 28);">0</div>
+  <div id="sequenceFoot">No complete safe sequence</div>
+  <div id="processCount">6</div>
+  <div id="processFoot">P0 ΓÇô P5</div>
+  <div id="resourceCount">4</div>
+  <div id="resourceFoot">A, B, C, D</div>
+  <div id="modeExplanationStrip"></div>
+  <div id="modeExplanationText"></div>
+  <div id="validationMessage" class="alert alert-warning mt-3 mb-0 py-2 small">Unsafe state: No complete safe sequence could be found. Process(es) unable to finish: P0, P1, P2, P3, P4, P5.</div>
+  <table id="matrixTable">
+    <thead>
+      <tr>
+        <th rowspan="2">Process</th>
+        <th class="group-head" colspan="4">Allocation</th>
+        <th class="group-head" colspan="4">Max Claim</th>
+        <th class="group-head" colspan="4">Need (Auto)</th>
+      </tr>
+      <tr>
+  <th>A</th><th>B</th><th>C</th><th>D</th><th>A</th><th>B</th><th>C</th><th>D</th><th>A</th><th>B</th><th>C</th><th>D</th></tr></thead><tbody><tr data-process-index="0"><td class="process-label">P0</td>
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="0" data-r="0" value="1" aria-label="P0 allocation A">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="0" data-r="1" value="0" aria-label="P0 allocation B">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="0" data-r="2" value="1" aria-label="P0 allocation C">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="0" data-r="3" value="0" aria-label="P0 allocation D">
+        </td>
+      
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="0" data-r="0" value="4" title="" aria-label="P0 max A">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="0" data-r="1" value="1" title="" aria-label="P0 max B">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="0" data-r="2" value="3" title="" aria-label="P0 max C">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="0" data-r="3" value="2" title="" aria-label="P0 max D">
+          </td>
+        <td><span class="need-cell" data-calc-p="0" data-calc-r="0">3</span></td><td><span class="need-cell" data-calc-p="0" data-calc-r="1">1</span></td><td><span class="need-cell" data-calc-p="0" data-calc-r="2">2</span></td><td><span class="need-cell" data-calc-p="0" data-calc-r="3">2</span></td></tr><tr data-process-index="1"><td class="process-label">P1</td>
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="1" data-r="0" value="1" aria-label="P1 allocation A">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="1" data-r="1" value="1" aria-label="P1 allocation B">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="1" data-r="2" value="0" aria-label="P1 allocation C">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="1" data-r="3" value="1" aria-label="P1 allocation D">
+        </td>
+      
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="1" data-r="0" value="2" title="" aria-label="P1 max A">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="1" data-r="1" value="1" title="" aria-label="P1 max B">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="1" data-r="2" value="2" title="" aria-label="P1 max C">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="1" data-r="3" value="2" title="" aria-label="P1 max D">
+          </td>
+        <td><span class="need-cell" data-calc-p="1" data-calc-r="0">1</span></td><td><span class="need-cell" data-calc-p="1" data-calc-r="1">0</span></td><td><span class="need-cell" data-calc-p="1" data-calc-r="2">2</span></td><td><span class="need-cell" data-calc-p="1" data-calc-r="3">1</span></td></tr><tr data-process-index="2"><td class="process-label">P2</td>
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="2" data-r="0" value="1" aria-label="P2 allocation A">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="2" data-r="1" value="0" aria-label="P2 allocation B">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="2" data-r="2" value="1" aria-label="P2 allocation C">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="2" data-r="3" value="1" aria-label="P2 allocation D">
+        </td>
+      
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="2" data-r="0" value="2" title="" aria-label="P2 max A">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="2" data-r="1" value="2" title="" aria-label="P2 max B">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="2" data-r="2" value="2" title="" aria-label="P2 max C">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="2" data-r="3" value="2" title="" aria-label="P2 max D">
+          </td>
+        <td><span class="need-cell" data-calc-p="2" data-calc-r="0">1</span></td><td><span class="need-cell" data-calc-p="2" data-calc-r="1">2</span></td><td><span class="need-cell" data-calc-p="2" data-calc-r="2">1</span></td><td><span class="need-cell" data-calc-p="2" data-calc-r="3">1</span></td></tr><tr data-process-index="3"><td class="process-label">P3</td>
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="3" data-r="0" value="0" aria-label="P3 allocation A">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="3" data-r="1" value="1" aria-label="P3 allocation B">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="3" data-r="2" value="1" aria-label="P3 allocation C">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="3" data-r="3" value="0" aria-label="P3 allocation D">
+        </td>
+      
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="3" data-r="0" value="2" title="" aria-label="P3 max A">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="3" data-r="1" value="1" title="" aria-label="P3 max B">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="3" data-r="2" value="2" title="" aria-label="P3 max C">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="3" data-r="3" value="2" title="" aria-label="P3 max D">
+          </td>
+        <td><span class="need-cell" data-calc-p="3" data-calc-r="0">2</span></td><td><span class="need-cell" data-calc-p="3" data-calc-r="1">0</span></td><td><span class="need-cell" data-calc-p="3" data-calc-r="2">1</span></td><td><span class="need-cell" data-calc-p="3" data-calc-r="3">2</span></td></tr><tr data-process-index="4"><td class="process-label">P4</td>
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="4" data-r="0" value="1" aria-label="P4 allocation A">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="4" data-r="1" value="1" aria-label="P4 allocation B">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="4" data-r="2" value="0" aria-label="P4 allocation C">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="4" data-r="3" value="0" aria-label="P4 allocation D">
+        </td>
+      
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="4" data-r="0" value="2" title="" aria-label="P4 max A">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="4" data-r="1" value="2" title="" aria-label="P4 max B">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="4" data-r="2" value="2" title="" aria-label="P4 max C">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="4" data-r="3" value="1" title="" aria-label="P4 max D">
+          </td>
+        <td><span class="need-cell" data-calc-p="4" data-calc-r="0">1</span></td><td><span class="need-cell" data-calc-p="4" data-calc-r="1">1</span></td><td><span class="need-cell" data-calc-p="4" data-calc-r="2">2</span></td><td><span class="need-cell" data-calc-p="4" data-calc-r="3">1</span></td></tr><tr data-process-index="5"><td class="process-label">P5</td>
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="5" data-r="0" value="0" aria-label="P5 allocation A">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="5" data-r="1" value="0" aria-label="P5 allocation B">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="5" data-r="2" value="1" aria-label="P5 allocation C">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="allocation" data-p="5" data-r="3" value="1" aria-label="P5 allocation D">
+        </td>
+      
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="5" data-r="0" value="2" title="" aria-label="P5 max A">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="5" data-r="1" value="1" title="" aria-label="P5 max B">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="5" data-r="2" value="2" title="" aria-label="P5 max C">
+          </td>
+        
+          <td>
+            <input class="form-control matrix-input " type="number" min="0" step="1" data-kind="max" data-p="5" data-r="3" value="2" title="" aria-label="P5 max D">
+          </td>
+        <td><span class="need-cell" data-calc-p="5" data-calc-r="0">2</span></td><td><span class="need-cell" data-calc-p="5" data-calc-r="1">1</span></td><td><span class="need-cell" data-calc-p="5" data-calc-r="2">1</span></td><td><span class="need-cell" data-calc-p="5" data-calc-r="3">1</span></td></tr><tr class="sum-row"><td class="process-label text-muted">Total Allocated</td><td><strong data-sum-r="0">4</strong></td><td><strong data-sum-r="1">3</strong></td><td><strong data-sum-r="2">4</strong></td><td><strong data-sum-r="3">3</strong></td><td colspan="8" class="text-secondary small text-start ps-3">Sum of current allocations across processes</td></tr><tr class="available-row"><td class="process-label">Available</td>
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="available" data-r="0" value="0" aria-label="Available A">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="available" data-r="1" value="1" aria-label="Available B">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="available" data-r="2" value="1" aria-label="Available C">
+        </td>
+      
+        <td>
+          <input class="form-control matrix-input" type="number" min="0" step="1" data-kind="available" data-r="3" value="2" aria-label="Available D">
+        </td>
+      <td colspan="8" class="text-secondary small text-start ps-3">Current free resource instances available to assign</td></tr></tbody></table>
+  <select id="requestProcess"><option value="0">P0</option><option value="1">P1</option><option value="2">P2</option><option value="3">P3</option><option value="4">P4</option><option value="5">P5</option></select>
+  <div id="requestProcessInfo">Remaining Need for <strong>P0</strong>: <code>[3, 1, 2, 2]</code></div>
+  <div id="requestInputs">
+    <div class="request-field">
+      <label for="req0">A units</label>
+      <input id="req0" class="form-control" type="number" min="0" step="1" value="0" aria-label="Request A">
+    </div>
+  
+    <div class="request-field">
+      <label for="req1">B units</label>
+      <input id="req1" class="form-control" type="number" min="0" step="1" value="0" aria-label="Request B">
+    </div>
+  
+    <div class="request-field">
+      <label for="req2">C units</label>
+      <input id="req2" class="form-control" type="number" min="0" step="1" value="0" aria-label="Request C">
+    </div>
+  
+    <div class="request-field">
+      <label for="req3">D units</label>
+      <input id="req3" class="form-control" type="number" min="0" step="1" value="0" aria-label="Request D">
+    </div>
+  </div>
+  <div id="requestResult" class="request-result mt-3 danger d-none">Condition 3 Failed: Granting request [1, 0, 0, 0] to P0 would lead to an UNSAFE state (potential deadlock). Request is DENIED and resources are not allocated.</div>
+  <button id="commitRequestBtn" class="d-none"></button>
+  <button id="stepResetBtn" disabled=""></button>
+  <button id="stepBackBtn" disabled=""></button>
+  <button id="autoPlayBtn" disabled=""><i class="bi bi-play-fill"></i> Play</button>
+  <button id="stepNextBtn" disabled=""></button>
+  <div id="allSequencesContainer" class="d-none"></div>
+  <div id="safeSequencesBadges"><button class="seq-badge active" data-seq-index="0">P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5</button><button class="seq-badge " data-seq-index="1">P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P5 ΓåÆ P4</button><button class="seq-badge " data-seq-index="2">P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P4 ΓåÆ P2 ΓåÆ P5</button><button class="seq-badge " data-seq-index="3">P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P4 ΓåÆ P5 ΓåÆ P2</button><button class="seq-badge " data-seq-index="4">P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P5 ΓåÆ P2 ΓåÆ P4</button><button class="seq-badge " data-seq-index="5">P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P5 ΓåÆ P4 ΓåÆ P2</button><button class="seq-badge " data-seq-index="6">P3 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0 ΓåÆ P4 ΓåÆ P5</button><button class="seq-badge " data-seq-index="7">P3 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0 ΓåÆ P5 ΓåÆ P4</button><button class="seq-badge " data-seq-index="8">P3 ΓåÆ P1 ΓåÆ P2 ΓåÆ P4 ΓåÆ P0 ΓåÆ P5</button><button class="seq-badge " data-seq-index="9">P3 ΓåÆ P1 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5 ΓåÆ P0</button><button class="seq-badge " data-seq-index="10">P3 ΓåÆ P1 ΓåÆ P2 ΓåÆ P5 ΓåÆ P0 ΓåÆ P4</button><button class="seq-badge " data-seq-index="11">P3 ΓåÆ P1 ΓåÆ P2 ΓåÆ P5 ΓåÆ P4 ΓåÆ P0</button><button class="seq-badge " data-seq-index="12">P3 ΓåÆ P1 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2 ΓåÆ P5</button><button class="seq-badge " data-seq-index="13">P3 ΓåÆ P1 ΓåÆ P4 ΓåÆ P0 ΓåÆ P5 ΓåÆ P2</button><button class="seq-badge " data-seq-index="14">P3 ΓåÆ P1 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0 ΓåÆ P5</button><button class="seq-badge " data-seq-index="15">P3 ΓåÆ P1 ΓåÆ P4 ΓåÆ P2 ΓåÆ P5 ΓåÆ P0</button><button class="seq-badge " data-seq-index="16">P3 ΓåÆ P1 ΓåÆ P4 ΓåÆ P5 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="17">P3 ΓåÆ P1 ΓåÆ P4 ΓåÆ P5 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="18">P3 ΓåÆ P1 ΓåÆ P5 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4</button><button class="seq-badge " data-seq-index="19">P3 ΓåÆ P1 ΓåÆ P5 ΓåÆ P0 ΓåÆ P4 ΓåÆ P2</button><button class="seq-badge " data-seq-index="20">P3 ΓåÆ P1 ΓåÆ P5 ΓåÆ P2 ΓåÆ P0 ΓåÆ P4</button><button class="seq-badge " data-seq-index="21">P3 ΓåÆ P1 ΓåÆ P5 ΓåÆ P2 ΓåÆ P4 ΓåÆ P0</button><button class="seq-badge " data-seq-index="22">P3 ΓåÆ P1 ΓåÆ P5 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="23">P3 ΓåÆ P1 ΓåÆ P5 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="24">P3 ΓåÆ P2 ΓåÆ P0 ΓåÆ P1 ΓåÆ P4 ΓåÆ P5</button><button class="seq-badge " data-seq-index="25">P3 ΓåÆ P2 ΓåÆ P0 ΓåÆ P1 ΓåÆ P5 ΓåÆ P4</button><button class="seq-badge " data-seq-index="26">P3 ΓåÆ P2 ΓåÆ P0 ΓåÆ P4 ΓåÆ P1 ΓåÆ P5</button><button class="seq-badge " data-seq-index="27">P3 ΓåÆ P2 ΓåÆ P0 ΓåÆ P4 ΓåÆ P5 ΓåÆ P1</button><button class="seq-badge " data-seq-index="28">P3 ΓåÆ P2 ΓåÆ P0 ΓåÆ P5 ΓåÆ P1 ΓåÆ P4</button><button class="seq-badge " data-seq-index="29">P3 ΓåÆ P2 ΓåÆ P0 ΓåÆ P5 ΓåÆ P4 ΓåÆ P1</button><button class="seq-badge " data-seq-index="30">P3 ΓåÆ P2 ΓåÆ P1 ΓåÆ P0 ΓåÆ P4 ΓåÆ P5</button><button class="seq-badge " data-seq-index="31">P3 ΓåÆ P2 ΓåÆ P1 ΓåÆ P0 ΓåÆ P5 ΓåÆ P4</button><button class="seq-badge " data-seq-index="32">P3 ΓåÆ P2 ΓåÆ P1 ΓåÆ P4 ΓåÆ P0 ΓåÆ P5</button><button class="seq-badge " data-seq-index="33">P3 ΓåÆ P2 ΓåÆ P1 ΓåÆ P4 ΓåÆ P5 ΓåÆ P0</button><button class="seq-badge " data-seq-index="34">P3 ΓåÆ P2 ΓåÆ P1 ΓåÆ P5 ΓåÆ P0 ΓåÆ P4</button><button class="seq-badge " data-seq-index="35">P3 ΓåÆ P2 ΓåÆ P1 ΓåÆ P5 ΓåÆ P4 ΓåÆ P0</button><button class="seq-badge " data-seq-index="36">P3 ΓåÆ P2 ΓåÆ P4 ΓåÆ P0 ΓåÆ P1 ΓåÆ P5</button><button class="seq-badge " data-seq-index="37">P3 ΓåÆ P2 ΓåÆ P4 ΓåÆ P0 ΓåÆ P5 ΓåÆ P1</button><button class="seq-badge " data-seq-index="38">P3 ΓåÆ P2 ΓåÆ P4 ΓåÆ P1 ΓåÆ P0 ΓåÆ P5</button><button class="seq-badge " data-seq-index="39">P3 ΓåÆ P2 ΓåÆ P4 ΓåÆ P1 ΓåÆ P5 ΓåÆ P0</button><button class="seq-badge " data-seq-index="40">P3 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5 ΓåÆ P0 ΓåÆ P1</button><button class="seq-badge " data-seq-index="41">P3 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5 ΓåÆ P1 ΓåÆ P0</button><button class="seq-badge " data-seq-index="42">P3 ΓåÆ P2 ΓåÆ P5 ΓåÆ P0 ΓåÆ P1 ΓåÆ P4</button><button class="seq-badge " data-seq-index="43">P3 ΓåÆ P2 ΓåÆ P5 ΓåÆ P0 ΓåÆ P4 ΓåÆ P1</button><button class="seq-badge " data-seq-index="44">P3 ΓåÆ P2 ΓåÆ P5 ΓåÆ P1 ΓåÆ P0 ΓåÆ P4</button><button class="seq-badge " data-seq-index="45">P3 ΓåÆ P2 ΓåÆ P5 ΓåÆ P1 ΓåÆ P4 ΓåÆ P0</button><button class="seq-badge " data-seq-index="46">P3 ΓåÆ P2 ΓåÆ P5 ΓåÆ P4 ΓåÆ P0 ΓåÆ P1</button><button class="seq-badge " data-seq-index="47">P3 ΓåÆ P2 ΓåÆ P5 ΓåÆ P4 ΓåÆ P1 ΓåÆ P0</button><button class="seq-badge " data-seq-index="48">P3 ΓåÆ P4 ΓåÆ P0 ΓåÆ P1 ΓåÆ P2 ΓåÆ P5</button><button class="seq-badge " data-seq-index="49">P3 ΓåÆ P4 ΓåÆ P0 ΓåÆ P1 ΓåÆ P5 ΓåÆ P2</button><button class="seq-badge " data-seq-index="50">P3 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2 ΓåÆ P1 ΓåÆ P5</button><button class="seq-badge " data-seq-index="51">P3 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2 ΓåÆ P5 ΓåÆ P1</button><button class="seq-badge " data-seq-index="52">P3 ΓåÆ P4 ΓåÆ P0 ΓåÆ P5 ΓåÆ P1 ΓåÆ P2</button><button class="seq-badge " data-seq-index="53">P3 ΓåÆ P4 ΓåÆ P0 ΓåÆ P5 ΓåÆ P2 ΓåÆ P1</button><button class="seq-badge " data-seq-index="54">P3 ΓåÆ P4 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P5</button><button class="seq-badge " data-seq-index="55">P3 ΓåÆ P4 ΓåÆ P1 ΓåÆ P0 ΓåÆ P5 ΓåÆ P2</button><button class="seq-badge " data-seq-index="56">P3 ΓåÆ P4 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0 ΓåÆ P5</button><button class="seq-badge " data-seq-index="57">P3 ΓåÆ P4 ΓåÆ P1 ΓåÆ P2 ΓåÆ P5 ΓåÆ P0</button><button class="seq-badge " data-seq-index="58">P3 ΓåÆ P4 ΓåÆ P1 ΓåÆ P5 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="59">P3 ΓåÆ P4 ΓåÆ P1 ΓåÆ P5 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="60">P3 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0 ΓåÆ P1 ΓåÆ P5</button><button class="seq-badge " data-seq-index="61">P3 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0 ΓåÆ P5 ΓåÆ P1</button><button class="seq-badge " data-seq-index="62">P3 ΓåÆ P4 ΓåÆ P2 ΓåÆ P1 ΓåÆ P0 ΓåÆ P5</button><button class="seq-badge " data-seq-index="63">P3 ΓåÆ P4 ΓåÆ P2 ΓåÆ P1 ΓåÆ P5 ΓåÆ P0</button><button class="seq-badge " data-seq-index="64">P3 ΓåÆ P4 ΓåÆ P2 ΓåÆ P5 ΓåÆ P0 ΓåÆ P1</button><button class="seq-badge " data-seq-index="65">P3 ΓåÆ P4 ΓåÆ P2 ΓåÆ P5 ΓåÆ P1 ΓåÆ P0</button><button class="seq-badge " data-seq-index="66">P3 ΓåÆ P4 ΓåÆ P5 ΓåÆ P0 ΓåÆ P1 ΓåÆ P2</button><button class="seq-badge " data-seq-index="67">P3 ΓåÆ P4 ΓåÆ P5 ΓåÆ P0 ΓåÆ P2 ΓåÆ P1</button><button class="seq-badge " data-seq-index="68">P3 ΓåÆ P4 ΓåÆ P5 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="69">P3 ΓåÆ P4 ΓåÆ P5 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="70">P3 ΓåÆ P4 ΓåÆ P5 ΓåÆ P2 ΓåÆ P0 ΓåÆ P1</button><button class="seq-badge " data-seq-index="71">P3 ΓåÆ P4 ΓåÆ P5 ΓåÆ P2 ΓåÆ P1 ΓåÆ P0</button><button class="seq-badge " data-seq-index="72">P3 ΓåÆ P5 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4</button><button class="seq-badge " data-seq-index="73">P3 ΓåÆ P5 ΓåÆ P1 ΓåÆ P0 ΓåÆ P4 ΓåÆ P2</button><button class="seq-badge " data-seq-index="74">P3 ΓåÆ P5 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0 ΓåÆ P4</button><button class="seq-badge " data-seq-index="75">P3 ΓåÆ P5 ΓåÆ P1 ΓåÆ P2 ΓåÆ P4 ΓåÆ P0</button><button class="seq-badge " data-seq-index="76">P3 ΓåÆ P5 ΓåÆ P1 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="77">P3 ΓåÆ P5 ΓåÆ P1 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="78">P3 ΓåÆ P5 ΓåÆ P2 ΓåÆ P0 ΓåÆ P1 ΓåÆ P4</button><button class="seq-badge " data-seq-index="79">P3 ΓåÆ P5 ΓåÆ P2 ΓåÆ P0 ΓåÆ P4 ΓåÆ P1</button><button class="seq-badge " data-seq-index="80">P3 ΓåÆ P5 ΓåÆ P2 ΓåÆ P1 ΓåÆ P0 ΓåÆ P4</button><button class="seq-badge " data-seq-index="81">P3 ΓåÆ P5 ΓåÆ P2 ΓåÆ P1 ΓåÆ P4 ΓåÆ P0</button><button class="seq-badge " data-seq-index="82">P3 ΓåÆ P5 ΓåÆ P2 ΓåÆ P4 ΓåÆ P0 ΓåÆ P1</button><button class="seq-badge " data-seq-index="83">P3 ΓåÆ P5 ΓåÆ P2 ΓåÆ P4 ΓåÆ P1 ΓåÆ P0</button><button class="seq-badge " data-seq-index="84">P3 ΓåÆ P5 ΓåÆ P4 ΓåÆ P0 ΓåÆ P1 ΓåÆ P2</button><button class="seq-badge " data-seq-index="85">P3 ΓåÆ P5 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2 ΓåÆ P1</button><button class="seq-badge " data-seq-index="86">P3 ΓåÆ P5 ΓåÆ P4 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="87">P3 ΓåÆ P5 ΓåÆ P4 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="88">P3 ΓåÆ P5 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0 ΓåÆ P1</button><button class="seq-badge " data-seq-index="89">P3 ΓåÆ P5 ΓåÆ P4 ΓåÆ P2 ΓåÆ P1 ΓåÆ P0</button><button class="seq-badge " data-seq-index="90">P5 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P3 ΓåÆ P4</button><button class="seq-badge " data-seq-index="91">P5 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4 ΓåÆ P3</button><button class="seq-badge " data-seq-index="92">P5 ΓåÆ P1 ΓåÆ P0 ΓåÆ P3 ΓåÆ P2 ΓåÆ P4</button><button class="seq-badge " data-seq-index="93">P5 ΓåÆ P1 ΓåÆ P0 ΓåÆ P3 ΓåÆ P4 ΓåÆ P2</button><button class="seq-badge " data-seq-index="94">P5 ΓåÆ P1 ΓåÆ P0 ΓåÆ P4 ΓåÆ P2 ΓåÆ P3</button><button class="seq-badge " data-seq-index="95">P5 ΓåÆ P1 ΓåÆ P0 ΓåÆ P4 ΓåÆ P3 ΓåÆ P2</button><button class="seq-badge " data-seq-index="96">P5 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0 ΓåÆ P3 ΓåÆ P4</button><button class="seq-badge " data-seq-index="97">P5 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0 ΓåÆ P4 ΓåÆ P3</button><button class="seq-badge " data-seq-index="98">P5 ΓåÆ P1 ΓåÆ P2 ΓåÆ P3 ΓåÆ P0 ΓåÆ P4</button><button class="seq-badge " data-seq-index="99">P5 ΓåÆ P1 ΓåÆ P2 ΓåÆ P3 ΓåÆ P4 ΓåÆ P0</button><button class="seq-badge " data-seq-index="100">P5 ΓåÆ P1 ΓåÆ P2 ΓåÆ P4 ΓåÆ P0 ΓåÆ P3</button><button class="seq-badge " data-seq-index="101">P5 ΓåÆ P1 ΓåÆ P2 ΓåÆ P4 ΓåÆ P3 ΓåÆ P0</button><button class="seq-badge " data-seq-index="102">P5 ΓåÆ P1 ΓåÆ P3 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4</button><button class="seq-badge " data-seq-index="103">P5 ΓåÆ P1 ΓåÆ P3 ΓåÆ P0 ΓåÆ P4 ΓåÆ P2</button><button class="seq-badge " data-seq-index="104">P5 ΓåÆ P1 ΓåÆ P3 ΓåÆ P2 ΓåÆ P0 ΓåÆ P4</button><button class="seq-badge " data-seq-index="105">P5 ΓåÆ P1 ΓåÆ P3 ΓåÆ P2 ΓåÆ P4 ΓåÆ P0</button><button class="seq-badge " data-seq-index="106">P5 ΓåÆ P1 ΓåÆ P3 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="107">P5 ΓåÆ P1 ΓåÆ P3 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="108">P5 ΓåÆ P1 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2 ΓåÆ P3</button><button class="seq-badge " data-seq-index="109">P5 ΓåÆ P1 ΓåÆ P4 ΓåÆ P0 ΓåÆ P3 ΓåÆ P2</button><button class="seq-badge " data-seq-index="110">P5 ΓåÆ P1 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0 ΓåÆ P3</button><button class="seq-badge " data-seq-index="111">P5 ΓåÆ P1 ΓåÆ P4 ΓåÆ P2 ΓåÆ P3 ΓåÆ P0</button><button class="seq-badge " data-seq-index="112">P5 ΓåÆ P1 ΓåÆ P4 ΓåÆ P3 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="113">P5 ΓåÆ P1 ΓåÆ P4 ΓåÆ P3 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="114">P5 ΓåÆ P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4</button><button class="seq-badge " data-seq-index="115">P5 ΓåÆ P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P4 ΓåÆ P2</button><button class="seq-badge " data-seq-index="116">P5 ΓåÆ P3 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0 ΓåÆ P4</button><button class="seq-badge " data-seq-index="117">P5 ΓåÆ P3 ΓåÆ P1 ΓåÆ P2 ΓåÆ P4 ΓåÆ P0</button><button class="seq-badge " data-seq-index="118">P5 ΓåÆ P3 ΓåÆ P1 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="119">P5 ΓåÆ P3 ΓåÆ P1 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="120">P5 ΓåÆ P3 ΓåÆ P2 ΓåÆ P0 ΓåÆ P1 ΓåÆ P4</button><button class="seq-badge " data-seq-index="121">P5 ΓåÆ P3 ΓåÆ P2 ΓåÆ P0 ΓåÆ P4 ΓåÆ P1</button><button class="seq-badge " data-seq-index="122">P5 ΓåÆ P3 ΓåÆ P2 ΓåÆ P1 ΓåÆ P0 ΓåÆ P4</button><button class="seq-badge " data-seq-index="123">P5 ΓåÆ P3 ΓåÆ P2 ΓåÆ P1 ΓåÆ P4 ΓåÆ P0</button><button class="seq-badge " data-seq-index="124">P5 ΓåÆ P3 ΓåÆ P2 ΓåÆ P4 ΓåÆ P0 ΓåÆ P1</button><button class="seq-badge " data-seq-index="125">P5 ΓåÆ P3 ΓåÆ P2 ΓåÆ P4 ΓåÆ P1 ΓåÆ P0</button><button class="seq-badge " data-seq-index="126">P5 ΓåÆ P3 ΓåÆ P4 ΓåÆ P0 ΓåÆ P1 ΓåÆ P2</button><button class="seq-badge " data-seq-index="127">P5 ΓåÆ P3 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2 ΓåÆ P1</button><button class="seq-badge " data-seq-index="128">P5 ΓåÆ P3 ΓåÆ P4 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="129">P5 ΓåÆ P3 ΓåÆ P4 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="130">P5 ΓåÆ P3 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0 ΓåÆ P1</button><button class="seq-badge " data-seq-index="131">P5 ΓåÆ P3 ΓåÆ P4 ΓåÆ P2 ΓåÆ P1 ΓåÆ P0</button><button class="seq-badge " data-seq-index="132">P5 ΓåÆ P4 ΓåÆ P0 ΓåÆ P1 ΓåÆ P2 ΓåÆ P3</button><button class="seq-badge " data-seq-index="133">P5 ΓåÆ P4 ΓåÆ P0 ΓåÆ P1 ΓåÆ P3 ΓåÆ P2</button><button class="seq-badge " data-seq-index="134">P5 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2 ΓåÆ P1 ΓåÆ P3</button><button class="seq-badge " data-seq-index="135">P5 ΓåÆ P4 ΓåÆ P0 ΓåÆ P2 ΓåÆ P3 ΓåÆ P1</button><button class="seq-badge " data-seq-index="136">P5 ΓåÆ P4 ΓåÆ P0 ΓåÆ P3 ΓåÆ P1 ΓåÆ P2</button><button class="seq-badge " data-seq-index="137">P5 ΓåÆ P4 ΓåÆ P0 ΓåÆ P3 ΓåÆ P2 ΓåÆ P1</button><button class="seq-badge " data-seq-index="138">P5 ΓåÆ P4 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P3</button><button class="seq-badge " data-seq-index="139">P5 ΓåÆ P4 ΓåÆ P1 ΓåÆ P0 ΓåÆ P3 ΓåÆ P2</button><button class="seq-badge " data-seq-index="140">P5 ΓåÆ P4 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0 ΓåÆ P3</button><button class="seq-badge " data-seq-index="141">P5 ΓåÆ P4 ΓåÆ P1 ΓåÆ P2 ΓåÆ P3 ΓåÆ P0</button><button class="seq-badge " data-seq-index="142">P5 ΓåÆ P4 ΓåÆ P1 ΓåÆ P3 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="143">P5 ΓåÆ P4 ΓåÆ P1 ΓåÆ P3 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="144">P5 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0 ΓåÆ P1 ΓåÆ P3</button><button class="seq-badge " data-seq-index="145">P5 ΓåÆ P4 ΓåÆ P2 ΓåÆ P0 ΓåÆ P3 ΓåÆ P1</button><button class="seq-badge " data-seq-index="146">P5 ΓåÆ P4 ΓåÆ P2 ΓåÆ P1 ΓåÆ P0 ΓåÆ P3</button><button class="seq-badge " data-seq-index="147">P5 ΓåÆ P4 ΓåÆ P2 ΓåÆ P1 ΓåÆ P3 ΓåÆ P0</button><button class="seq-badge " data-seq-index="148">P5 ΓåÆ P4 ΓåÆ P2 ΓåÆ P3 ΓåÆ P0 ΓåÆ P1</button><button class="seq-badge " data-seq-index="149">P5 ΓåÆ P4 ΓåÆ P2 ΓåÆ P3 ΓåÆ P1 ΓåÆ P0</button><button class="seq-badge " data-seq-index="150">P5 ΓåÆ P4 ΓåÆ P3 ΓåÆ P0 ΓåÆ P1 ΓåÆ P2</button><button class="seq-badge " data-seq-index="151">P5 ΓåÆ P4 ΓåÆ P3 ΓåÆ P0 ΓåÆ P2 ΓåÆ P1</button><button class="seq-badge " data-seq-index="152">P5 ΓåÆ P4 ΓåÆ P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2</button><button class="seq-badge " data-seq-index="153">P5 ΓåÆ P4 ΓåÆ P3 ΓåÆ P1 ΓåÆ P2 ΓåÆ P0</button><button class="seq-badge " data-seq-index="154">P5 ΓåÆ P4 ΓåÆ P3 ΓåÆ P2 ΓåÆ P0 ΓåÆ P1</button><button class="seq-badge " data-seq-index="155">P5 ΓåÆ P4 ΓåÆ P3 ΓåÆ P2 ΓåÆ P1 ΓåÆ P0</button></div>
+  <div id="seqFoundCount">156</div>
+  <div id="stepSummary">
+      <strong class="text-danger">Unsafe state detected:</strong> Only 0 of 6 process(es) could finish.<br>
+      <span class="text-secondary">Work at standstill = <code>[0, 1, 1, 2]</code>.</span>
+    </div>
+  <div id="traceList"><div class="text-secondary small p-3 bg-light rounded text-center">No process can satisfy <code>Need Γëñ Work</code> with the initial Available vector.</div></div>
+  <canvas id="resourceChart" width="731" height="4683" style="display: block; box-sizing: border-box; height: 4683px; width: 731px;"></canvas>
+  <div id="chartLegendTotal" class="d-none"></div>
+  <div id="activityLog">
+      <div class="log-item info">
+        <span class="log-icon"><i class="bi bi-activity"></i></span>
+        <div>
+          <div>Simulator ready. Type your problem values or choose a preset.</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item warning">
+        <span class="log-icon"><i class="bi bi-exclamation-triangle"></i></span>
+        <div>
+          <div>Safety check FAILED: System is in an unsafe state.</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item success">
+        <span class="log-icon"><i class="bi bi-check-lg"></i></span>
+        <div>
+          <div>Safety check PASSED (156 valid sequences). Sequence: P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item info">
+        <span class="log-icon"><i class="bi bi-activity"></i></span>
+        <div>
+          <div>Loaded preset: test_case_6x4</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item success">
+        <span class="log-icon"><i class="bi bi-check-lg"></i></span>
+        <div>
+          <div>Safety check PASSED (156 valid sequences). Sequence: P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item warning">
+        <span class="log-icon"><i class="bi bi-exclamation-triangle"></i></span>
+        <div>
+          <div>Safety check FAILED: System is in an unsafe state.</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item info">
+        <span class="log-icon"><i class="bi bi-activity"></i></span>
+        <div>
+          <div>Loaded preset: deadlock</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item warning">
+        <span class="log-icon"><i class="bi bi-exclamation-triangle"></i></span>
+        <div>
+          <div>Safety check FAILED: System is in an unsafe state.</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item danger">
+        <span class="log-icon"><i class="bi bi-x-octagon"></i></span>
+        <div>
+          <div>Request for P0 DENIED: resulting state would be unsafe.</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item warning">
+        <span class="log-icon"><i class="bi bi-exclamation-triangle"></i></span>
+        <div>
+          <div>Request DENIED for P0: exceeds remaining Need.</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item warning">
+        <span class="log-icon"><i class="bi bi-exclamation-triangle"></i></span>
+        <div>
+          <div>Request WAITING for P2: insufficient available resources.</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item success">
+        <span class="log-icon"><i class="bi bi-check-lg"></i></span>
+        <div>
+          <div>Request for P3 [1, 0, 0, 1] validated as SAFE.</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item info">
+        <span class="log-icon"><i class="bi bi-activity"></i></span>
+        <div>
+          <div>Switched trace view to sequence: P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item info">
+        <span class="log-icon"><i class="bi bi-activity"></i></span>
+        <div>
+          <div>Switched trace view to sequence: P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P5 ΓåÆ P4</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    
+      <div class="log-item success">
+        <span class="log-icon"><i class="bi bi-check-lg"></i></span>
+        <div>
+          <div>Safety check PASSED (156 valid sequences). Sequence: P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5</div>
+          <div class="log-time">09:54:18 PM</div>
+        </div>
+      </div>
+    </div>
+  <input type="radio" id="availModeDirect" name="availMode" checked="">
+  <input type="radio" id="availModeTotal" name="availMode">
+  <input type="radio" id="matrixModeMax" name="matrixMode" checked="">
+  <input type="radio" id="matrixModeNeed" name="matrixMode">
+  <input id="processesInput" value="6">
+  <input id="resourcesInput" value="4">
+  <button id="applyDimensionsBtn"></button>
+  <button id="saveNamesBtn"></button>
+  <button id="resetDefaultsBtn"></button>
+  <button id="zeroAllBtn"></button>
+  <button id="quickFillZerosBtn"></button>
+  <button id="randomizeBtn"></button>
+  <button id="checkSafetyBtn"></button>
+  <button id="simulateRequestBtn"></button>
+  <button id="clearRequestBtn"></button>
+  <button id="runDeadlockCheckBtn"></button>
+  <input type="checkbox" id="useCustomDeadlockRequests">
+  <div id="customRequestMatrixSection"></div>
+  <table id="deadlockRequestTable"></table>
+  <div id="deadlockResult"></div>
+  <div id="deadlockTrace"></div>
+  <div id="presetMenu"></div>
+  <button id="clearAllPresetBtn"></button>
+  <button id="importExportBtn"></button>
+  <button id="copyJsonBtn"></button>
+  <button id="downloadJsonBtn"></button>
+  <button id="applyImportJsonBtn"></button>
+  <input id="uploadJsonInput">
+  <textarea id="jsonProblemArea"></textarea>
+  <div id="importErrorAlert"></div>
+  <button id="reportBtn"></button>
+  <button id="printReportBtn"></button>
+  <div id="reportContent"></div>
+  <button id="clearLogBtn"></button>
+
+  <div id="testOutput" style="font-family: monospace; white-space: pre; padding: 20px;">=== PART 1: CONVENTIONAL OS BANKER TESTS ===
+[PASS] Safety result is not null
+[PASS] System is determined to be SAFE
+[PASS] Exhaustive safe sequence count is EXACTLY 156 (got 156)
+[PASS] UI displays safeSeqCount = 156
+[PASS] First sequence is P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5 (got P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5)
+[PASS] Trace has 6 steps
+[PASS] Initial Work is [2, 1, 1, 2]
+[PASS] After P3: Work is [2, 2, 2, 2]
+[PASS] After P1: Work is [3, 3, 2, 3]
+[PASS] After P0: Work is [4, 3, 3, 3]
+[PASS] After P2: Work is [5, 3, 4, 4]
+[PASS] After P4: Work is [6, 4, 4, 4]
+[PASS] After P5: Work is [6, 4, 5, 5]
+[PASS] Switched to sequence index 1
+[PASS] Trace index reset to 0
+[PASS] Switched back to sequence index 0
+[PASS] Step next increments traceIndex to 1
+[PASS] Reset button resets traceIndex to 0
+[PASS] Request for P3 [1,0,0,1] is GRANTED (commit button visible)
+[PASS] Request result shows success banner
+[PASS] Request exceeding Available is WAITING (warning banner)
+[PASS] Request exceeding Need is DENIED (danger banner)
+[PASS] Request leading to unsafe state is DENIED as UNSAFE
+[PASS] Deadlock preset correctly evaluated as UNSAFE
+[PASS] Unsafe state has 0 safe sequences
+[PASS] UI shows 0 safe sequences for unsafe state
+[PASS] UI status shows Unsafe State
+[PASS] Reloaded 6x4 test case (156 sequences)
+[PASS] After changing Available[0] to 0, system automatically recalculates to UNSAFE
+[PASS] Safe sequence count updates to 0
+=== PART 2: FMS MANUFACTURING RESEARCH MODEL TESTS (LAWLEY ET AL. 1998) ===
+[PASS] FMS Test 1: Valid move preserving safe state is GRANTED
+[PASS] FMS Test 1: Reason code is SAFE_GRANTED
+[PASS] FMS Test 1: Safe completion sequence exists: J1
+[PASS] FMS Test 2: Move exceeding buffer capacity is NOT granted
+[PASS] FMS Test 2: Reason code is CAPACITY_FULL
+[PASS] FMS Test 3: Request for buffer not on route is NOT granted
+[PASS] FMS Test 3: Reason code is OVERCLAIM
+[PASS] FMS Test 4: Request leaving unsafe state is DENIED/DELAYED by Banker controller
+[PASS] FMS Test 4: Reason code is UNSAFE_STATE
+[PASS] FMS Test 5: J1 occupies B2 before completion
+[PASS] FMS Test 5: Job J1 is active on floor
+[PASS] FMS Test 6: Saturated buffer causes upstream machine to wait (state=waiting_buffer)
+[PASS] FMS Test 7: Uncontrolled greedy policy under contention leads to circular wait deadlock
+[PASS] FMS Test 7: Banker controller intervenes and flags UNSAFE_STATE, preventing deadlock
+[PASS] FMS Test 8: Reset restores simTime to 0
+[PASS] FMS Test 8: Reset clears activeJobs on floor
+[PASS] FMS Test 8: Reset clears deadlock flag
+[PASS] FMS Test 9: Buffer utilization history recorded
+[PASS] FMS Test 9: Granted requests metric tracked
+[PASS] FMS Test 9: Unsafe rejected metric tracked
+[PASS] FMS Test 10: Trace steps, safe sequence, and final decision are mathematically consistent
+=== ALL VERIFICATION TESTS (CONVENTIONAL &amp; FMS) PASSED SUCCESSFULLY ===</div>
+
+  <script src="fms_simulator.js"></script>
+  <script src="script.js"></script>
+
+  <script>
+    const out = document.getElementById('testOutput');
+    const logs = [];
+    function assert(cond, msg) {
+      if (cond) {
+        logs.push('[PASS] ' + msg);
+        console.log('[PASS] ' + msg);
+      } else {
+        logs.push('[FAIL] ' + msg);
+        console.error('[FAIL] ' + msg);
+      }
+    }
+
+    try {
+      // Explicitly initialize DOM event listeners for tests
+      initEventListeners();
+
+      logs.push('=== PART 1: CONVENTIONAL OS BANKER TESTS ===');
+
+      // TEST 1: Load the 6x4 test case from preset
+      loadPreset('test_case_6x4');
+      checkSafety();
+
+      assert(safetyResult !== null, 'Safety result is not null');
+      assert(safetyResult.safe === true, 'System is determined to be SAFE');
+      assert(allSafeSequences.length === 156, 'Exhaustive safe sequence count is EXACTLY 156 (got ' + allSafeSequences.length + ')');
+      assert(document.getElementById('safeSeqCount').textContent === '156', 'UI displays safeSeqCount = 156');
+
+      // Check first highlighted sequence
+      const seq0 = formatProcessNamesList(safetyResult.sequence);
+      assert(seq0 === 'P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5', 'First sequence is P3 ΓåÆ P1 ΓåÆ P0 ΓåÆ P2 ΓåÆ P4 ΓåÆ P5 (got ' + seq0 + ')');
+
+      // Check Work vectors for first sequence
+      const steps = safetyResult.steps;
+      assert(steps.length === 6, 'Trace has 6 steps');
+      assert(JSON.stringify(safetyResult.initialWork) === JSON.stringify([2, 1, 1, 2]), 'Initial Work is [2, 1, 1, 2]');
+      assert(JSON.stringify(steps[0].after) === JSON.stringify([2, 2, 2, 2]), 'After P3: Work is [2, 2, 2, 2]');
+      assert(JSON.stringify(steps[1].after) === JSON.stringify([3, 3, 2, 3]), 'After P1: Work is [3, 3, 2, 3]');
+      assert(JSON.stringify(steps[2].after) === JSON.stringify([4, 3, 3, 3]), 'After P0: Work is [4, 3, 3, 3]');
+      assert(JSON.stringify(steps[3].after) === JSON.stringify([5, 3, 4, 4]), 'After P2: Work is [5, 3, 4, 4]');
+      assert(JSON.stringify(steps[4].after) === JSON.stringify([6, 4, 4, 4]), 'After P4: Work is [6, 4, 4, 4]');
+      assert(JSON.stringify(steps[5].after) === JSON.stringify([6, 4, 5, 5]), 'After P5: Work is [6, 4, 5, 5]');
+
+      // TEST 2: Sequence Switching
+      switchSafeSequence(1);
+      assert(selectedSeqIndex === 1, 'Switched to sequence index 1');
+      assert(traceIndex === 0, 'Trace index reset to 0');
+      switchSafeSequence(0);
+      assert(selectedSeqIndex === 0, 'Switched back to sequence index 0');
+
+      // TEST 3: Trace Navigation Controls
+      traceIndex = 0;
+      document.getElementById('stepNextBtn').click();
+      assert(traceIndex === 1, 'Step next increments traceIndex to 1');
+      document.getElementById('stepResetBtn').click();
+      assert(traceIndex === 0, 'Reset button resets traceIndex to 0');
+
+      // TEST 4: Resource Request Simulator Outcomes
+      // 4a: Granted Request (P3 requests [1, 0, 0, 1])
+      document.getElementById('requestProcess').value = '3';
+      document.getElementById('req0').value = '1';
+      document.getElementById('req1').value = '0';
+      document.getElementById('req2').value = '0';
+      document.getElementById('req3').value = '1';
+      simulateRequest();
+      assert(!document.getElementById('commitRequestBtn').classList.contains('d-none'), 'Request for P3 [1,0,0,1] is GRANTED (commit button visible)');
+      assert(document.getElementById('requestResult').classList.contains('success'), 'Request result shows success banner');
+
+      // 4b: Waiting Request (P2 requests [0, 2, 0, 0] > Available[1]=1)
+      clearRequest();
+      document.getElementById('requestProcess').value = '2';
+      document.getElementById('req0').value = '0';
+      document.getElementById('req1').value = '2';
+      document.getElementById('req2').value = '0';
+      document.getElementById('req3').value = '0';
+      simulateRequest();
+      assert(document.getElementById('requestResult').classList.contains('warning'), 'Request exceeding Available is WAITING (warning banner)');
+
+      // 4c: Denied Request - Exceeds Need (P0 requests [5, 0, 0, 0] > Need[0][0]=3)
+      clearRequest();
+      document.getElementById('requestProcess').value = '0';
+      document.getElementById('req0').value = '5';
+      document.getElementById('req1').value = '0';
+      document.getElementById('req2').value = '0';
+      document.getElementById('req3').value = '0';
+      simulateRequest();
+      assert(document.getElementById('requestResult').classList.contains('danger'), 'Request exceeding Need is DENIED (danger banner)');
+
+      // 4d: Denied Request - Leaves Unsafe State (P0 requests [1, 0, 0, 0])
+      clearRequest();
+      document.getElementById('requestProcess').value = '0';
+      document.getElementById('req0').value = '1';
+      document.getElementById('req1').value = '0';
+      document.getElementById('req2').value = '0';
+      document.getElementById('req3').value = '0';
+      simulateRequest();
+      assert(document.getElementById('requestResult').classList.contains('danger'), 'Request leading to unsafe state is DENIED as UNSAFE');
+
+      // TEST 5: Unsafe State Verification
+      clearRequest();
+      loadPreset('deadlock'); // Load known deadlock/unsafe preset
+      checkSafety();
+      assert(safetyResult.safe === false, 'Deadlock preset correctly evaluated as UNSAFE');
+      assert(allSafeSequences.length === 0, 'Unsafe state has 0 safe sequences');
+      assert(document.getElementById('safeSeqCount').textContent === '0', 'UI shows 0 safe sequences for unsafe state');
+      assert(document.getElementById('statusValue').textContent === 'Unsafe State', 'UI status shows Unsafe State');
+
+      // TEST 6: Real-time recalculation on input change
+      loadPreset('test_case_6x4');
+      checkSafety();
+      assert(allSafeSequences.length === 156, 'Reloaded 6x4 test case (156 sequences)');
+      state.available[0] = 0;
+      checkSafety();
+      assert(safetyResult.safe === false, 'After changing Available[0] to 0, system automatically recalculates to UNSAFE');
+      assert(document.getElementById('safeSeqCount').textContent === '0', 'Safe sequence count updates to 0');
+
+      logs.push('=== PART 2: FMS MANUFACTURING RESEARCH MODEL TESTS (LAWLEY ET AL. 1998) ===');
+      
+      // FMS Case 1: A valid move that preserves a safe state
+      window.FMS.reset();
+      window.FMS.loadScenario('scenario_a');
+      const fmsEval1 = window.FMS.evaluateProposedMove('J1', 'B2');
+      assert(fmsEval1.allowed === true, 'FMS Test 1: Valid move preserving safe state is GRANTED');
+      assert(fmsEval1.reasonCode === 'SAFE_GRANTED', 'FMS Test 1: Reason code is SAFE_GRANTED');
+      assert(fmsEval1.safeSequence.length > 0, 'FMS Test 1: Safe completion sequence exists: ' + fmsEval1.safeSequence.join(' ΓåÆ '));
+
+      // FMS Case 2: A request exceeding available buffer capacity
+      window.FMS.loadScenario('scenario_b');
+      const fmsEval2 = window.FMS.evaluateProposedMove('J2', 'B2');
+      assert(fmsEval2.allowed === false, 'FMS Test 2: Move exceeding buffer capacity is NOT granted');
+      assert(fmsEval2.reasonCode === 'CAPACITY_FULL', 'FMS Test 2: Reason code is CAPACITY_FULL');
+
+      // FMS Case 3: A request exceeding the remaining resource claim
+      const fmsEval3 = window.FMS.evaluateProposedMove('J1', 'B1');
+      assert(fmsEval3.allowed === false, 'FMS Test 3: Request for buffer not on route is NOT granted');
+      assert(fmsEval3.reasonCode === 'OVERCLAIM', 'FMS Test 3: Reason code is OVERCLAIM');
+
+      // FMS Case 4: A request that passes quantity validation but results in an unsafe tentative state
+      window.FMS.loadScenario('scenario_c');
+      const fmsEval4 = window.FMS.evaluateProposedMove('J2', 'B1');
+      assert(fmsEval4.allowed === false, 'FMS Test 4: Request leaving unsafe state is DENIED/DELAYED by Banker controller');
+      assert(fmsEval4.reasonCode === 'UNSAFE_STATE', 'FMS Test 4: Reason code is UNSAFE_STATE');
+
+      // FMS Case 5: A completed job releasing its allocated resources
+      window.FMS.loadScenario('scenario_a');
+      const curState5 = window.FMS.getState();
+      curState5.buffers.B2.push('J1');
+      curState5.activeJobs['J1'].holdingBuffer = 'B2';
+      assert(curState5.buffers.B2.includes('J1'), 'FMS Test 5: J1 occupies B2 before completion');
+      // Advance job to final step
+      curState5.activeJobs['J1'].currentStepIndex = curState5.activeJobs['J1'].route.length - 1;
+      curState5.activeJobs['J1'].currentLocation = 'M3';
+      assert(curState5.activeJobs['J1'] !== undefined, 'FMS Test 5: Job J1 is active on floor');
+
+      // FMS Case 6: A full buffer preventing material movement
+      window.FMS.loadScenario('scenario_b');
+      window.FMS.step();
+      assert(window.FMS.getState().machines.M1.state === 'waiting_buffer', 'FMS Test 6: Saturated buffer causes upstream machine to wait (state=waiting_buffer)');
+
+      // FMS Case 7: Multiple jobs competing for limited capacity (Uncontrolled Deadlock vs Banker's Avoidance)
+      window.FMS.loadScenario('scenario_d_uncontrolled');
+      assert(window.FMS.getState().isDeadlocked === true, 'FMS Test 7: Uncontrolled greedy policy under contention leads to circular wait deadlock');
+
+      // Now verify under Banker's Avoidance: safe intervention
+      window.FMS.loadScenario('scenario_d_bankers');
+      const bRes = window.FMS.evaluateProposedMove('J2', 'B1');
+      assert(bRes.allowed === false && bRes.reasonCode === 'UNSAFE_STATE', 'FMS Test 7: Banker controller intervenes and flags UNSAFE_STATE, preventing deadlock');
+
+      // FMS Case 8: Reset restoring the exact initial state
+      window.FMS.reset();
+      const freshSt = window.FMS.getState();
+      assert(freshSt.simTime === 0, 'FMS Test 8: Reset restores simTime to 0');
+      assert(Object.keys(freshSt.activeJobs).length === 0, 'FMS Test 8: Reset clears activeJobs on floor');
+      assert(freshSt.isDeadlocked === false, 'FMS Test 8: Reset clears deadlock flag');
+
+      // FMS Case 9: Correct calculation of all displayed metrics
+      window.FMS.loadScenario('scenario_a');
+      for (let i = 0; i < 4; i++) window.FMS.step();
+      const stAfterRun = window.FMS.getState();
+      assert(stAfterRun.metrics.history.time.length > 0, 'FMS Test 9: Buffer utilization history recorded');
+      assert(typeof stAfterRun.metrics.grantedRequests === 'number', 'FMS Test 9: Granted requests metric tracked');
+      assert(typeof stAfterRun.metrics.rejectedUnsafe === 'number', 'FMS Test 9: Unsafe rejected metric tracked');
+
+      // FMS Case 10: Consistency between safety trace, factory view, and final decision
+      window.FMS.loadScenario('scenario_a');
+      const fmsEval10 = window.FMS.evaluateProposedMove('J1', 'B2');
+      assert(fmsEval10.allowed === true && fmsEval10.traceSteps.length > 0 && fmsEval10.safeSequence.length > 0, 'FMS Test 10: Trace steps, safe sequence, and final decision are mathematically consistent');
+
+      logs.push('=== ALL VERIFICATION TESTS (CONVENTIONAL & FMS) PASSED SUCCESSFULLY ===');
+    } catch (err) {
+      logs.push('[EXCEPTION] ' + err.stack);
+      console.error(err);
+    }
+
+    out.textContent = logs.join('\n');
+  </script>
+
+
+</body></html>

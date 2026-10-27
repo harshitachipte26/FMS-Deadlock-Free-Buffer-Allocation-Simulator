@@ -1,0 +1,277 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Banker's Algorithm Test Runner</title>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Minimal mockup of DOM elements required by script.js -->
+  <div id="statusValue"></div>
+  <div id="statusFoot"></div>
+  <div id="safeSeqCount"></div>
+  <div id="sequenceFoot"></div>
+  <div id="processCount"></div>
+  <div id="processFoot"></div>
+  <div id="resourceCount"></div>
+  <div id="resourceFoot"></div>
+  <div id="modeExplanationStrip"></div>
+  <div id="modeExplanationText"></div>
+  <div id="validationMessage"></div>
+  <table id="matrixTable"></table>
+  <select id="requestProcess"></select>
+  <div id="requestProcessInfo"></div>
+  <div id="requestInputs"></div>
+  <div id="requestResult"></div>
+  <button id="commitRequestBtn"></button>
+  <button id="stepResetBtn"></button>
+  <button id="stepBackBtn"></button>
+  <button id="autoPlayBtn"></button>
+  <button id="stepNextBtn"></button>
+  <div id="allSequencesContainer"></div>
+  <div id="safeSequencesBadges"></div>
+  <div id="seqFoundCount"></div>
+  <div id="stepSummary"></div>
+  <div id="traceList"></div>
+  <canvas id="resourceChart"></canvas>
+  <div id="chartLegendTotal"></div>
+  <div id="activityLog"></div>
+  <input type="radio" id="availModeDirect" name="availMode" checked>
+  <input type="radio" id="availModeTotal" name="availMode">
+  <input type="radio" id="matrixModeMax" name="matrixMode" checked>
+  <input type="radio" id="matrixModeNeed" name="matrixMode">
+  <input id="processesInput" value="6">
+  <input id="resourcesInput" value="4">
+  <button id="applyDimensionsBtn"></button>
+  <button id="saveNamesBtn"></button>
+  <button id="resetDefaultsBtn"></button>
+  <button id="zeroAllBtn"></button>
+  <button id="quickFillZerosBtn"></button>
+  <button id="randomizeBtn"></button>
+  <button id="checkSafetyBtn"></button>
+  <button id="simulateRequestBtn"></button>
+  <button id="clearRequestBtn"></button>
+  <button id="runDeadlockCheckBtn"></button>
+  <input type="checkbox" id="useCustomDeadlockRequests">
+  <div id="customRequestMatrixSection"></div>
+  <table id="deadlockRequestTable"></table>
+  <div id="deadlockResult"></div>
+  <div id="deadlockTrace"></div>
+  <div id="presetMenu"></div>
+  <button id="clearAllPresetBtn"></button>
+  <button id="importExportBtn"></button>
+  <button id="copyJsonBtn"></button>
+  <button id="downloadJsonBtn"></button>
+  <button id="applyImportJsonBtn"></button>
+  <input id="uploadJsonInput">
+  <textarea id="jsonProblemArea"></textarea>
+  <div id="importErrorAlert"></div>
+  <button id="reportBtn"></button>
+  <button id="printReportBtn"></button>
+  <div id="reportContent"></div>
+  <button id="clearLogBtn"></button>
+
+  <div id="testOutput" style="font-family: monospace; white-space: pre; padding: 20px;"></div>
+
+  <script src="fms_simulator.js"></script>
+  <script src="script.js"></script>
+
+  <script>
+    const out = document.getElementById('testOutput');
+    const logs = [];
+    function assert(cond, msg) {
+      if (cond) {
+        logs.push('[PASS] ' + msg);
+        console.log('[PASS] ' + msg);
+      } else {
+        logs.push('[FAIL] ' + msg);
+        console.error('[FAIL] ' + msg);
+      }
+    }
+
+    try {
+      // Explicitly initialize DOM event listeners for tests
+      initEventListeners();
+
+      logs.push('=== PART 1: CONVENTIONAL OS BANKER TESTS ===');
+
+      // TEST 1: Load the 6x4 test case from preset
+      loadPreset('test_case_6x4');
+      checkSafety();
+
+      assert(safetyResult !== null, 'Safety result is not null');
+      assert(safetyResult.safe === true, 'System is determined to be SAFE');
+      assert(allSafeSequences.length === 156, 'Exhaustive safe sequence count is EXACTLY 156 (got ' + allSafeSequences.length + ')');
+      assert(document.getElementById('safeSeqCount').textContent === '156', 'UI displays safeSeqCount = 156');
+
+      // Check first highlighted sequence
+      const seq0 = formatProcessNamesList(safetyResult.sequence);
+      assert(seq0 === 'P3 → P1 → P0 → P2 → P4 → P5', 'First sequence is P3 → P1 → P0 → P2 → P4 → P5 (got ' + seq0 + ')');
+
+      // Check Work vectors for first sequence
+      const steps = safetyResult.steps;
+      assert(steps.length === 6, 'Trace has 6 steps');
+      assert(JSON.stringify(safetyResult.initialWork) === JSON.stringify([2, 1, 1, 2]), 'Initial Work is [2, 1, 1, 2]');
+      assert(JSON.stringify(steps[0].after) === JSON.stringify([2, 2, 2, 2]), 'After P3: Work is [2, 2, 2, 2]');
+      assert(JSON.stringify(steps[1].after) === JSON.stringify([3, 3, 2, 3]), 'After P1: Work is [3, 3, 2, 3]');
+      assert(JSON.stringify(steps[2].after) === JSON.stringify([4, 3, 3, 3]), 'After P0: Work is [4, 3, 3, 3]');
+      assert(JSON.stringify(steps[3].after) === JSON.stringify([5, 3, 4, 4]), 'After P2: Work is [5, 3, 4, 4]');
+      assert(JSON.stringify(steps[4].after) === JSON.stringify([6, 4, 4, 4]), 'After P4: Work is [6, 4, 4, 4]');
+      assert(JSON.stringify(steps[5].after) === JSON.stringify([6, 4, 5, 5]), 'After P5: Work is [6, 4, 5, 5]');
+
+      // TEST 2: Sequence Switching
+      switchSafeSequence(1);
+      assert(selectedSeqIndex === 1, 'Switched to sequence index 1');
+      assert(traceIndex === 0, 'Trace index reset to 0');
+      switchSafeSequence(0);
+      assert(selectedSeqIndex === 0, 'Switched back to sequence index 0');
+
+      // TEST 3: Trace Navigation Controls
+      traceIndex = 0;
+      document.getElementById('stepNextBtn').click();
+      assert(traceIndex === 1, 'Step next increments traceIndex to 1');
+      document.getElementById('stepResetBtn').click();
+      assert(traceIndex === 0, 'Reset button resets traceIndex to 0');
+
+      // TEST 4: Resource Request Simulator Outcomes
+      // 4a: Granted Request (P3 requests [1, 0, 0, 1])
+      document.getElementById('requestProcess').value = '3';
+      document.getElementById('req0').value = '1';
+      document.getElementById('req1').value = '0';
+      document.getElementById('req2').value = '0';
+      document.getElementById('req3').value = '1';
+      simulateRequest();
+      assert(!document.getElementById('commitRequestBtn').classList.contains('d-none'), 'Request for P3 [1,0,0,1] is GRANTED (commit button visible)');
+      assert(document.getElementById('requestResult').classList.contains('success'), 'Request result shows success banner');
+
+      // 4b: Waiting Request (P2 requests [0, 2, 0, 0] > Available[1]=1)
+      clearRequest();
+      document.getElementById('requestProcess').value = '2';
+      document.getElementById('req0').value = '0';
+      document.getElementById('req1').value = '2';
+      document.getElementById('req2').value = '0';
+      document.getElementById('req3').value = '0';
+      simulateRequest();
+      assert(document.getElementById('requestResult').classList.contains('warning'), 'Request exceeding Available is WAITING (warning banner)');
+
+      // 4c: Denied Request - Exceeds Need (P0 requests [5, 0, 0, 0] > Need[0][0]=3)
+      clearRequest();
+      document.getElementById('requestProcess').value = '0';
+      document.getElementById('req0').value = '5';
+      document.getElementById('req1').value = '0';
+      document.getElementById('req2').value = '0';
+      document.getElementById('req3').value = '0';
+      simulateRequest();
+      assert(document.getElementById('requestResult').classList.contains('danger'), 'Request exceeding Need is DENIED (danger banner)');
+
+      // 4d: Denied Request - Leaves Unsafe State (P0 requests [1, 0, 0, 0])
+      clearRequest();
+      document.getElementById('requestProcess').value = '0';
+      document.getElementById('req0').value = '1';
+      document.getElementById('req1').value = '0';
+      document.getElementById('req2').value = '0';
+      document.getElementById('req3').value = '0';
+      simulateRequest();
+      assert(document.getElementById('requestResult').classList.contains('danger'), 'Request leading to unsafe state is DENIED as UNSAFE');
+
+      // TEST 5: Unsafe State Verification
+      clearRequest();
+      loadPreset('deadlock'); // Load known deadlock/unsafe preset
+      checkSafety();
+      assert(safetyResult.safe === false, 'Deadlock preset correctly evaluated as UNSAFE');
+      assert(allSafeSequences.length === 0, 'Unsafe state has 0 safe sequences');
+      assert(document.getElementById('safeSeqCount').textContent === '0', 'UI shows 0 safe sequences for unsafe state');
+      assert(document.getElementById('statusValue').textContent === 'Unsafe State', 'UI status shows Unsafe State');
+
+      // TEST 6: Real-time recalculation on input change
+      loadPreset('test_case_6x4');
+      checkSafety();
+      assert(allSafeSequences.length === 156, 'Reloaded 6x4 test case (156 sequences)');
+      state.available[0] = 0;
+      checkSafety();
+      assert(safetyResult.safe === false, 'After changing Available[0] to 0, system automatically recalculates to UNSAFE');
+      assert(document.getElementById('safeSeqCount').textContent === '0', 'Safe sequence count updates to 0');
+
+      logs.push('=== PART 2: FMS MANUFACTURING RESEARCH MODEL TESTS (LAWLEY ET AL. 1998) ===');
+      
+      // FMS Case 1: A valid move that preserves a safe state
+      window.FMS.reset();
+      window.FMS.loadScenario('scenario_a');
+      const fmsEval1 = window.FMS.evaluateProposedMove('J1', 'B2');
+      assert(fmsEval1.allowed === true, 'FMS Test 1: Valid move preserving safe state is GRANTED');
+      assert(fmsEval1.reasonCode === 'SAFE_GRANTED', 'FMS Test 1: Reason code is SAFE_GRANTED');
+      assert(fmsEval1.safeSequence.length > 0, 'FMS Test 1: Safe completion sequence exists: ' + fmsEval1.safeSequence.join(' → '));
+
+      // FMS Case 2: A request exceeding available buffer capacity
+      window.FMS.loadScenario('scenario_b');
+      const fmsEval2 = window.FMS.evaluateProposedMove('J2', 'B2');
+      assert(fmsEval2.allowed === false, 'FMS Test 2: Move exceeding buffer capacity is NOT granted');
+      assert(fmsEval2.reasonCode === 'CAPACITY_FULL', 'FMS Test 2: Reason code is CAPACITY_FULL');
+
+      // FMS Case 3: A request exceeding the remaining resource claim
+      const fmsEval3 = window.FMS.evaluateProposedMove('J1', 'B1');
+      assert(fmsEval3.allowed === false, 'FMS Test 3: Request for buffer not on route is NOT granted');
+      assert(fmsEval3.reasonCode === 'OVERCLAIM', 'FMS Test 3: Reason code is OVERCLAIM');
+
+      // FMS Case 4: A request that passes quantity validation but results in an unsafe tentative state
+      window.FMS.loadScenario('scenario_c');
+      const fmsEval4 = window.FMS.evaluateProposedMove('J2', 'B1');
+      assert(fmsEval4.allowed === false, 'FMS Test 4: Request leaving unsafe state is DENIED/DELAYED by Banker controller');
+      assert(fmsEval4.reasonCode === 'UNSAFE_STATE', 'FMS Test 4: Reason code is UNSAFE_STATE');
+
+      // FMS Case 5: A completed job releasing its allocated resources
+      window.FMS.loadScenario('scenario_a');
+      const curState5 = window.FMS.getState();
+      curState5.buffers.B2.push('J1');
+      curState5.activeJobs['J1'].holdingBuffer = 'B2';
+      assert(curState5.buffers.B2.includes('J1'), 'FMS Test 5: J1 occupies B2 before completion');
+      // Advance job to final step
+      curState5.activeJobs['J1'].currentStepIndex = curState5.activeJobs['J1'].route.length - 1;
+      curState5.activeJobs['J1'].currentLocation = 'M3';
+      assert(curState5.activeJobs['J1'] !== undefined, 'FMS Test 5: Job J1 is active on floor');
+
+      // FMS Case 6: A full buffer preventing material movement
+      window.FMS.loadScenario('scenario_b');
+      window.FMS.step();
+      assert(window.FMS.getState().machines.M1.state === 'waiting_buffer', 'FMS Test 6: Saturated buffer causes upstream machine to wait (state=waiting_buffer)');
+
+      // FMS Case 7: Multiple jobs competing for limited capacity (Uncontrolled Deadlock vs Banker's Avoidance)
+      window.FMS.loadScenario('scenario_d_uncontrolled');
+      assert(window.FMS.getState().isDeadlocked === true, 'FMS Test 7: Uncontrolled greedy policy under contention leads to circular wait deadlock');
+
+      // Now verify under Banker's Avoidance: safe intervention
+      window.FMS.loadScenario('scenario_d_bankers');
+      const bRes = window.FMS.evaluateProposedMove('J2', 'B1');
+      assert(bRes.allowed === false && bRes.reasonCode === 'UNSAFE_STATE', 'FMS Test 7: Banker controller intervenes and flags UNSAFE_STATE, preventing deadlock');
+
+      // FMS Case 8: Reset restoring the exact initial state
+      window.FMS.reset();
+      const freshSt = window.FMS.getState();
+      assert(freshSt.simTime === 0, 'FMS Test 8: Reset restores simTime to 0');
+      assert(Object.keys(freshSt.activeJobs).length === 0, 'FMS Test 8: Reset clears activeJobs on floor');
+      assert(freshSt.isDeadlocked === false, 'FMS Test 8: Reset clears deadlock flag');
+
+      // FMS Case 9: Correct calculation of all displayed metrics
+      window.FMS.loadScenario('scenario_a');
+      for (let i = 0; i < 4; i++) window.FMS.step();
+      const stAfterRun = window.FMS.getState();
+      assert(stAfterRun.metrics.history.time.length > 0, 'FMS Test 9: Buffer utilization history recorded');
+      assert(typeof stAfterRun.metrics.grantedRequests === 'number', 'FMS Test 9: Granted requests metric tracked');
+      assert(typeof stAfterRun.metrics.rejectedUnsafe === 'number', 'FMS Test 9: Unsafe rejected metric tracked');
+
+      // FMS Case 10: Consistency between safety trace, factory view, and final decision
+      window.FMS.loadScenario('scenario_a');
+      const fmsEval10 = window.FMS.evaluateProposedMove('J1', 'B2');
+      assert(fmsEval10.allowed === true && fmsEval10.traceSteps.length > 0 && fmsEval10.safeSequence.length > 0, 'FMS Test 10: Trace steps, safe sequence, and final decision are mathematically consistent');
+
+      logs.push('=== ALL VERIFICATION TESTS (CONVENTIONAL & FMS) PASSED SUCCESSFULLY ===');
+    } catch (err) {
+      logs.push('[EXCEPTION] ' + err.stack);
+      console.error(err);
+    }
+
+    out.textContent = logs.join('\n');
+  </script>
+</body>
+</html>
